@@ -21,7 +21,8 @@ export type PitchEvent =
   | { type: 'PRODUCT_SELECTED'; productId: string; ts: number }
   | { type: 'SESSION_END'; ts: number }
   | { type: 'RESET_IDLE'; ts: number }
-  | { type: 'HEARTBEAT'; ts: number };
+  | { type: 'HEARTBEAT'; ts: number }
+  | { type: 'PARTICIPATION_RESULT'; ts: number; idempotencyKey: string; name: string | null; code: string | null; productId: string | null; points: number };
 
 export const INITIAL_ROOM_STATE: RoomState = {
   status: 'idle',
@@ -43,6 +44,7 @@ export function reduceRoomState(state: RoomState, event: PitchEvent): RoomState 
     case 'HELLO':
     case 'STATE_SYNC':
     case 'HEARTBEAT':
+    case 'PARTICIPATION_RESULT':
       return state;
   }
 }
