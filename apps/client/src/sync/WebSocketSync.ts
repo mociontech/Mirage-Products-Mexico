@@ -72,8 +72,22 @@ export class WebSocketSync implements SyncChannel {
       for (const handler of this.handlers) handler(parsed);
     });
 
-    socket.addEventListener('close', () => this.handleDisconnect());
-    socket.addEventListener('error', () => socket.close());
+    // Un intento fallido puede disparar 'error', 'close', o ambos segun el
+    // runtime (probado: en Node, un ECONNREFUSED dispara 'error' pero jamas
+    // 'close'; en un navegador tipicamente disparan los dos). onSettled se
+    // ejecuta una sola vez por socket pase lo que pase, y nunca llama
+    // socket.close() el mismo - hacerlo desde dentro de un handler de
+    // 'error' mientras el socket ya esta fallando revienta el stack en la
+    // implementacion de WebSocket de Node (visto en pruebas reales matando
+    // el sync-server a mitad de sesion).
+    let settled = false;
+    const onSettled = () => {
+      if (settled) return;
+      settled = true;
+      this.handleDisconnect();
+    };
+    socket.addEventListener('close', onSettled);
+    socket.addEventListener('error', onSettled);
   }
 
   private handleDisconnect(): void {
