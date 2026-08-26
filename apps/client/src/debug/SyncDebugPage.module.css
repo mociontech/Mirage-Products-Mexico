@@ -1,0 +1,42 @@
+.page {
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  padding: var(--space-3);
+  font-family: monospace;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.row input,
+.row select {
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.row button {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.log {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  height: 40vh;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+}
