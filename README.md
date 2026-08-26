@@ -19,15 +19,16 @@ android           proyecto Capacitor (llega en Fase 6)
 
 ```bash
 npm install
-npm run dev:client
+npm run dev:client   # app en local, rutas /tablet, /pitch y /debug/sync
+npm run dev:server   # sync-server, ws://localhost:7777
 ```
 
-Esto sirve la app en local con dos rutas independientes: `/tablet` y `/pitch`. En desarrollo, sin `sync-server` levantado, ambas rutas cargan pero no estan sincronizadas todavia (transporte `BroadcastChannelSync` llega en Fase 2).
+Por default el cliente usa el transporte `BroadcastChannelSync` (dos pestanas de la misma maquina, sin servidor). Para probar contra `sync-server` de verdad, copia `apps/client/.env.example` a `apps/client/.env` con `VITE_SYNC_TRANSPORT=websocket`, abre `/debug/sync`, guarda host/puerto/room (el mismo `sync-server` corriendo en `localhost:7777` sirve para probar en una sola maquina) y dispara eventos a mano.
 
 ## Estado
 
 Este README se ampliara al final de cada fase con diagrama de red, procedimiento de instalacion en sitio y advertencias de HTTPS/contenido mixto (ver Fase 8). Por ahora:
 
 - [x] Fase 1 - estructura del monorepo, tokens, reset, guards de kiosco, rutas `/tablet` y `/pitch` con pantallas vacias.
-- [ ] Fase 2 - `sync-server` + `WebSocketSync`.
+- [x] Fase 2 - `sync-server` (salas, snapshot de estado, heartbeat, logs) + `WebSocketSync`/`BroadcastChannelSync` en cliente + `/debug/sync` para probar eventos a mano.
 - [ ] Fase 3 en adelante - ver historial de commits.
