@@ -6,6 +6,9 @@ export interface TabletSession {
 
 export const EMPTY_SESSION: TabletSession = { name: null, code: null };
 
+/** Puntos por participacion completa (seleccionar un producto y llegar a Agradecimiento). */
+export const PARTICIPATION_POINTS = 10;
+
 export function generateParticipantCode(): string {
   return String(Math.floor(100_000 + Math.random() * 900_000));
 }

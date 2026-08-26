@@ -1,9 +1,8 @@
 import { BrandFrame } from '../../../../components/BrandFrame/BrandFrame';
 import { Button } from '../../../../components/Button/Button';
 import { Logo } from '../../../../components/Logo/Logo';
+import { PARTICIPATION_POINTS } from '../../session';
 import styles from './ThankYou.module.css';
-
-const PARTICIPATION_POINTS = 10;
 
 interface ThankYouProps {
   name: string | null;

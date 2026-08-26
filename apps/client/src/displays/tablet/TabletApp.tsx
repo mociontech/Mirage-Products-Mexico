@@ -7,7 +7,7 @@ import { ProductSelect } from './screens/ProductSelect/ProductSelect';
 import { Register } from './screens/Register/Register';
 import { Settings } from './screens/Settings/Settings';
 import { ThankYou } from './screens/ThankYou/ThankYou';
-import { EMPTY_SESSION, type TabletSession } from './session';
+import { EMPTY_SESSION, PARTICIPATION_POINTS, type TabletSession } from './session';
 
 const TABLET_DESIGN_WIDTH = 1920;
 const TABLET_DESIGN_HEIGHT = 1200;
@@ -83,6 +83,18 @@ export function TabletApp() {
         <ThankYou
           name={session.name}
           onFinish={() => {
+            // El resultado de la sesion viaja aparte de los eventos de UI del
+            // pitch: el sync-server lo encola hacia el data hub y la DB de
+            // rankings (Fase 7), nunca hacia la pantalla del pitch.
+            send({
+              type: 'PARTICIPATION_RESULT',
+              ts: Date.now(),
+              idempotencyKey: crypto.randomUUID(),
+              name: session.name,
+              code: session.code,
+              productId: selectedProductId,
+              points: PARTICIPATION_POINTS,
+            });
             send({ type: 'SESSION_END', ts: Date.now() });
             goHome();
           }}
