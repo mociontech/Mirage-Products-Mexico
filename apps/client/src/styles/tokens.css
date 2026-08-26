@@ -1,0 +1,49 @@
+/**
+ * Design tokens extraidos de Figma (pagina "01_Ui Kit", seccion UI-KIT).
+ * Node: https://www.figma.com/design/vilVPSsVUtGwTG8Er9njo5/Mirage?node-id=23-277
+ *
+ * Los dos tonos "Pag Web" sin variable Figma asignada (slate oscuro y casi-negro)
+ * y los stops del degradado quedan pendientes de precisar con get_design_context.
+ */
+:root {
+  /* Colores Pantone */
+  --color-red: #e4032c;
+  --color-black: #010202;
+  --color-white: #ffffff;
+  --color-gray: #d9d9d9;
+
+  /* Colores Pagina Web */
+  --color-web-gray: #5b5e5e;
+  --color-web-red-dark: #a00000;
+
+  --color-warm-white: #f6f4f1;
+
+  /* Alias semanticos */
+  --color-bg: var(--color-warm-white);
+  --color-surface: var(--color-white);
+  --color-text: var(--color-black);
+  --color-text-muted: var(--color-web-gray);
+  --color-primary: var(--color-red);
+  --color-primary-text: var(--color-white);
+  --color-border: var(--color-gray);
+
+  /* Tipografia */
+  --font-heading: 'Poppins', sans-serif; /* Bold 700 - titulares y frases */
+  --font-body: 'Lora', serif; /* Normal 400 - cuerpo de texto */
+
+  /* Radios y espaciado base (ajustar contra Figma en Fase 3) */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-pill: 999px;
+
+  --space-1: clamp(0.25rem, 0.2rem + 0.3vw, 0.5rem);
+  --space-2: clamp(0.5rem, 0.4rem + 0.6vw, 1rem);
+  --space-3: clamp(1rem, 0.8rem + 1.2vw, 2rem);
+  --space-4: clamp(1.5rem, 1.2rem + 1.8vw, 3rem);
+
+  /* Viewports de referencia (Figma) */
+  --tablet-viewport-width: 1920;
+  --tablet-viewport-height: 1200;
+  --pitch-viewport-width: 2147;
+  --pitch-viewport-height: 4224;
+}
