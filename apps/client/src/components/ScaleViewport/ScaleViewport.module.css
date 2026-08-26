@@ -11,4 +11,5 @@
 .inner {
   transform-origin: center center;
   flex-shrink: 0;
+  background: var(--color-bg);
 }

@@ -18,7 +18,9 @@ interface ScaleViewportProps {
  */
 export function ScaleViewport({ designWidth, designHeight, children }: ScaleViewportProps) {
   const outerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(() =>
+    Math.min(window.innerWidth / designWidth, window.innerHeight / designHeight),
+  );
 
   useEffect(() => {
     const outer = outerRef.current;
