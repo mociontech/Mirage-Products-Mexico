@@ -19,6 +19,9 @@ export function SyncDebugPage() {
 
   const { send, status, lastEvent } = useSync(role);
 
+  const transport = import.meta.env.VITE_SYNC_TRANSPORT === 'websocket' ? 'websocket' : 'broadcast';
+  const effectiveRoom = getSyncConfig()?.room ?? 'stand-01';
+
   useEffect(() => {
     if (!lastEvent) return;
     setLog((prev) => [...prev, `<- ${JSON.stringify(lastEvent)}`].slice(-200));
@@ -37,6 +40,17 @@ export function SyncDebugPage() {
   return (
     <div className={styles.page}>
       <h1>Sync debug</h1>
+
+      <div className={styles.row}>
+        <span>
+          origen: {window.location.origin} - transporte: {transport}
+          {transport === 'broadcast' && ` - canal: mirage-sync-${effectiveRoom}`}
+        </span>
+      </div>
+      <p style={{ marginBottom: '1rem', opacity: 0.7 }}>
+        En modo broadcast, dos pestanas solo se ven si comparten el mismo origen (mismo puerto). "connected" aqui
+        solo confirma que el canal local se abrio, no que haya alguien del otro lado.
+      </p>
 
       <div className={styles.row}>
         <ConnectionDot status={status} />
