@@ -1,0 +1,57 @@
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg);
+}
+
+.hint {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 2rem;
+  z-index: 2;
+}
+
+.stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.imageWrap {
+  position: relative;
+  height: 85%;
+  aspect-ratio: 761 / 614;
+}
+
+.boardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.hotspot {
+  position: absolute;
+  border-radius: var(--radius-sm);
+  border: 3px solid transparent;
+}
+
+.hotspot.selected {
+  border-color: var(--color-primary);
+  background: rgba(228, 3, 44, 0.15);
+}
+
+.confirmRow {
+  position: absolute;
+  bottom: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}

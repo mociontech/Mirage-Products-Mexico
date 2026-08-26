@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { ScaleViewport } from '../../components/ScaleViewport/ScaleViewport';
+import { useIdleReset } from '../../hooks/useIdleReset';
+import { useSync } from '../../sync/useSync';
 import { Home } from './screens/Home/Home';
-import { Register } from './screens/Register/Register';
 import { ProductSelect } from './screens/ProductSelect/ProductSelect';
-import { ThankYou } from './screens/ThankYou/ThankYou';
+import { Register } from './screens/Register/Register';
 import { Settings } from './screens/Settings/Settings';
+import { ThankYou } from './screens/ThankYou/ThankYou';
+import { EMPTY_SESSION, type TabletSession } from './session';
 
 const TABLET_DESIGN_WIDTH = 1920;
 const TABLET_DESIGN_HEIGHT = 1200;
@@ -18,15 +21,75 @@ type TabletScreen = 'home' | 'register' | 'productSelect' | 'thankYou' | 'settin
  * historial del navegador.
  */
 export function TabletApp() {
-  const [screen] = useState<TabletScreen>('home');
+  const [screen, setScreen] = useState<TabletScreen>('home');
+  const [screenBeforeSettings, setScreenBeforeSettings] = useState<TabletScreen>('home');
+  const [session, setSession] = useState<TabletSession>(EMPTY_SESSION);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const { send } = useSync('tablet');
+
+  const goHome = () => {
+    setScreen('home');
+    setSession(EMPTY_SESSION);
+    setSelectedProductId(null);
+  };
+
+  useIdleReset(() => {
+    if (screen === 'home' || screen === 'settings') return;
+    send({ type: 'SESSION_END', ts: Date.now() });
+    goHome();
+  });
+
+  const openSettings = () => {
+    setScreenBeforeSettings(screen);
+    setScreen('settings');
+  };
 
   return (
     <ScaleViewport designWidth={TABLET_DESIGN_WIDTH} designHeight={TABLET_DESIGN_HEIGHT}>
-      {screen === 'home' && <Home />}
-      {screen === 'register' && <Register />}
-      {screen === 'productSelect' && <ProductSelect />}
-      {screen === 'thankYou' && <ThankYou />}
-      {screen === 'settings' && <Settings />}
+      {screen === 'home' && (
+        <Home
+          onStart={() => {
+            send({ type: 'SESSION_START', ts: Date.now() });
+            setScreen('register');
+          }}
+          onOpenSettings={openSettings}
+        />
+      )}
+
+      {screen === 'register' && (
+        <Register
+          onComplete={(nextSession) => {
+            setSession(nextSession);
+            setScreen('productSelect');
+          }}
+        />
+      )}
+
+      {screen === 'productSelect' && (
+        <ProductSelect
+          selectedProductId={selectedProductId}
+          onPreview={(productId) => {
+            setSelectedProductId(productId);
+            send({ type: 'PRODUCT_PREVIEW', productId, ts: Date.now() });
+          }}
+          onConfirm={(productId) => {
+            send({ type: 'PRODUCT_SELECTED', productId, ts: Date.now() });
+            setScreen('thankYou');
+          }}
+        />
+      )}
+
+      {screen === 'thankYou' && (
+        <ThankYou
+          name={session.name}
+          onFinish={() => {
+            send({ type: 'SESSION_END', ts: Date.now() });
+            goHome();
+          }}
+        />
+      )}
+
+      {screen === 'settings' && <Settings onClose={() => setScreen(screenBeforeSettings)} />}
     </ScaleViewport>
   );
 }
