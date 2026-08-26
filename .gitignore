@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Estado local del sync-server (log rotativo, cola del outbox)
+outbox/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
