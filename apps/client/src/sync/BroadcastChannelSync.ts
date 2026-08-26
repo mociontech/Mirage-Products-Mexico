@@ -1,4 +1,4 @@
-import { createStaleEventFilter, type SyncChannel, type SyncStatus } from './SyncChannel';
+import { createEventFreshnessCheck, type SyncChannel, type SyncStatus } from './SyncChannel';
 import { isPitchEvent, type PitchEvent, type Role } from './events';
 
 /**
@@ -10,14 +10,14 @@ export class BroadcastChannelSync implements SyncChannel {
   private readonly channel: BroadcastChannel;
   private readonly role: Role;
   private readonly handlers = new Set<(event: PitchEvent) => void>();
-  private readonly isStale = createStaleEventFilter();
+  private readonly isFresh = createEventFreshnessCheck();
 
   constructor(room: string, role: Role) {
     this.role = role;
     this.channel = new BroadcastChannel(`mirage-sync-${room}`);
     this.channel.addEventListener('message', (message) => {
       const parsed: unknown = message.data;
-      if (!isPitchEvent(parsed) || this.isStale(parsed)) return;
+      if (!isPitchEvent(parsed) || !this.isFresh(parsed)) return;
       for (const handler of this.handlers) handler(parsed);
     });
     this.send({ type: 'HELLO', role: this.role, ts: Date.now() });

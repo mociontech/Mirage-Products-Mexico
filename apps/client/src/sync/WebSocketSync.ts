@@ -1,4 +1,4 @@
-import { createStaleEventFilter, type SyncChannel, type SyncStatus } from './SyncChannel';
+import { createEventFreshnessCheck, type SyncChannel, type SyncStatus } from './SyncChannel';
 import { isPitchEvent, type PitchEvent, type Role } from './events';
 
 const HEARTBEAT_INTERVAL_MS = 5000;
@@ -13,7 +13,7 @@ export class WebSocketSync implements SyncChannel {
   private socket: WebSocket | null = null;
   private _status: SyncStatus = 'connecting';
   private readonly handlers = new Set<(event: PitchEvent) => void>();
-  private readonly isStale = createStaleEventFilter();
+  private readonly isFresh = createEventFreshnessCheck();
   private reconnectAttempt = 0;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
@@ -68,7 +68,7 @@ export class WebSocketSync implements SyncChannel {
       } catch {
         return;
       }
-      if (!isPitchEvent(parsed) || this.isStale(parsed)) return;
+      if (!isPitchEvent(parsed) || !this.isFresh(parsed)) return;
       for (const handler of this.handlers) handler(parsed);
     });
 

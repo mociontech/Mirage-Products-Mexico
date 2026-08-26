@@ -21,8 +21,11 @@ export interface SyncChannel {
  * eventos pueden llegar fuera de orden tras una reconexion). Cada canal
  * mantiene su propio filtro: dos pestanas broadcast y una conexion
  * websocket no comparten nocion de "ultimo evento".
+ *
+ * Devuelve true si el evento es nuevo y debe aplicarse, false si es mas
+ * viejo que el ultimo ya aplicado y debe descartarse.
  */
-export function createStaleEventFilter(): (event: PitchEvent) => boolean {
+export function createEventFreshnessCheck(): (event: PitchEvent) => boolean {
   let lastAppliedTs = 0;
   return (event: PitchEvent): boolean => {
     if (event.ts < lastAppliedTs) return false;
