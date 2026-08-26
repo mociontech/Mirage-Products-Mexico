@@ -9,6 +9,8 @@ interface IdInputProps {
   onChange: (value: string) => void;
   /** Se dispara cuando el codigo llega a 6 digitos. */
   onComplete?: (value: string) => void;
+  /** true para solo mostrar un codigo ya generado (pantalla de confirmacion). */
+  readOnly?: boolean;
 }
 
 function onlyDigits(raw: string): string {
@@ -20,7 +22,8 @@ function onlyDigits(raw: string): string {
  * pantalla de Figma. Usa inputs numericos nativos para que el teclado del
  * sistema aparezca solo - no se replica un teclado a mano.
  */
-export function IdInput({ value, onChange, onComplete }: IdInputProps) {
+export function IdInput({ value, onChange, onComplete, readOnly = false }: IdInputProps) {
+  const firstRef = useRef<HTMLInputElement>(null);
   const secondRef = useRef<HTMLInputElement>(null);
   const firstGroup = value.slice(0, GROUP_LENGTH);
   const secondGroup = value.slice(GROUP_LENGTH, GROUP_LENGTH * 2);
@@ -45,15 +48,14 @@ export function IdInput({ value, onChange, onComplete }: IdInputProps) {
 
   const handleSecondKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Backspace' && secondGroup.length === 0) {
-      const first = event.currentTarget.form?.querySelector<HTMLInputElement>('[data-id-input="first"]');
-      first?.focus();
+      firstRef.current?.focus();
     }
   };
 
   return (
     <div className={styles.row}>
       <input
-        data-id-input="first"
+        ref={firstRef}
         className={styles.group}
         inputMode="numeric"
         pattern="[0-9]*"
@@ -62,6 +64,7 @@ export function IdInput({ value, onChange, onComplete }: IdInputProps) {
         onChange={(event) => handleFirstChange(event.target.value)}
         placeholder="000"
         aria-label="Primeros 3 digitos del codigo"
+        readOnly={readOnly}
       />
       <span className={styles.separator}>-</span>
       <input
@@ -75,6 +78,7 @@ export function IdInput({ value, onChange, onComplete }: IdInputProps) {
         onKeyDown={handleSecondKeyDown}
         placeholder="000"
         aria-label="Ultimos 3 digitos del codigo"
+        readOnly={readOnly}
       />
     </div>
   );
