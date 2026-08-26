@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Mirage Catalogo Interactivo</string>
+    <string name="title_activity_main">Mirage Catalogo Interactivo</string>
+    <string name="package_name">com.mirage.catalogointeractivo</string>
+    <string name="custom_url_scheme">com.mirage.catalogointeractivo</string>
+</resources>

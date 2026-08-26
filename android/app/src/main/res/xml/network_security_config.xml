@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Permite trafico cleartext (ws://, http://) hacia el sync-server en la red
+  local. El esquema de Android no admite restringir esto por rango CIDR
+  (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) via domain-config, solo
+  dominios o IPs exactas - y la IP del equipo del pitch se configura en
+  sitio (ver pantalla de Settings), no se conoce en tiempo de build. Por
+  eso el permiso es a nivel de base-config, aceptable porque la app entera
+  vive en una LAN de stand sin salida a internet desde la tablet.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
