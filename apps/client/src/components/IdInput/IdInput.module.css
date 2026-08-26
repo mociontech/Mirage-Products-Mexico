@@ -1,0 +1,29 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.group {
+  width: 4.5em;
+  height: 3em;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 2rem;
+  text-align: center;
+  letter-spacing: 0.1em;
+}
+
+.group::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.separator {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 2rem;
+  color: var(--color-text);
+}
