@@ -1,0 +1,18 @@
+.dot {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--radius-pill);
+}
+
+.connected {
+  background: #2ecc71;
+}
+
+.connecting {
+  background: #f1c40f;
+}
+
+.disconnected {
+  background: var(--color-red);
+}
