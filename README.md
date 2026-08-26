@@ -50,6 +50,14 @@ Guarda el `.keystore` fuera del repo, copia `android/keystore.properties.example
 
 `versionCode`/`versionName` en `android/app/build.gradle` se alinean a mano con los tags de git de cada release.
 
+## Gateway a internet (Fase 7)
+
+La tablet nunca habla con internet directamente: manda `PARTICIPATION_RESULT` por WebSocket al `sync-server`, que lo encola en `apps/sync-server/outbox/records.jsonl` (patron outbox - persistido antes de intentar el envio) y lo entrega con reintentos exponenciales tanto al data hub de la empresa como a la DB de rankings. Un `idempotencyKey` por sesion evita que un doble flush duplique el registro.
+
+**Nada de esto tiene endpoints reales configurados todavia** - ni el data hub de la empresa ni la eleccion Supabase/Firebase para rankings estan definidos. Copia `apps/sync-server/.env.example` a `.env` y llena `DATA_HUB_URL`/`DATA_HUB_API_KEY`/`RANKING_DB_URL`/`RANKING_DB_API_KEY` cuando existan. Sin configurar, el outbox acumula y reintenta para siempre - exactamente el mismo comportamiento que "sin internet", verificado con un servidor mock local (retry con backoff, purga tras 2xx, deduplicacion por idempotencyKey).
+
+`GET /ranking?experience=catalogo` en el mismo puerto del `sync-server` expone el ranking compartido (pensado para reusarse con la experiencia "kick_and_match" via la columna `experience`); devuelve `503` con el motivo (`ranking_db_not_configured` o `ranking_db_unavailable`) mientras no haya DB real.
+
 ## Estado
 
 Este README se ampliara al final de cada fase con diagrama de red, procedimiento de instalacion en sitio y advertencias de HTTPS/contenido mixto (ver Fase 8). Por ahora:
@@ -60,4 +68,5 @@ Este README se ampliara al final de cada fase con diagrama de red, procedimiento
 - [x] Fase 4 - flujo completo de la tablet (Inicio, Registro con codigo, Seleccion de producto con hotspots, Agradecimiento, Settings).
 - [x] Fase 5 - maquina de estados del pitch (IDLE, Attract, ProductContent, watchdog de 90s, persistencia en sessionStorage).
 - [x] Fase 6 - proyecto Capacitor, modo kiosco, network security config. `gradlew assembleRelease` no se pudo probar en este entorno (sin JDK/Android SDK) - pendiente de una maquina con Android Studio.
-- [ ] Fase 7 en adelante - ver historial de commits.
+- [x] Fase 7 - outbox con reintentos/backoff/idempotencia (verificado con un gateway mock local), `GET /ranking`. Sin data hub ni DB de rankings reales todavia - pendiente del equipo.
+- [ ] Fase 8 en adelante - ver historial de commits.
