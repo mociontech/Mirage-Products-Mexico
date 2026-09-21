@@ -1,4 +1,3 @@
-import { Logo } from '../../../../components/Logo/Logo';
 import type { Product } from '../../../../content/products';
 import styles from './ProductContent.module.css';
 
@@ -6,18 +5,17 @@ interface ProductContentProps {
   product: Product;
 }
 
-/** Espejo del producto que el usuario esta explorando/selecciono en la tablet. */
+/**
+ * Espejo del producto que el usuario esta explorando/selecciono en la
+ * tablet. Cada producto trae su propio banner vertical ya armado por la
+ * marca (logo + foto + copy + features, ver product.pitchImage en
+ * content/products.ts) - el pitch solo lo muestra a pantalla completa, no
+ * recompone el layout.
+ */
 export function ProductContent({ product }: ProductContentProps) {
   return (
     <div className={styles.screen}>
-      <Logo width={900} />
-      <img src={product.heroImage} alt={product.name} className={styles.hero} />
-      <div className={styles.feature}>
-        <img src={product.featureIcon} alt="" className={styles.featureIcon} />
-        <span className={styles.featureLabel}>{product.featureLabel}</span>
-      </div>
-      <p className={styles.description}>{product.description}</p>
-      {product.isPlaceholder && <p className={styles.placeholderBadge}>Contenido de muestra - pendiente de la marca</p>}
+      <img src={product.pitchImage} alt={product.name} className={styles.banner} />
     </div>
   );
 }
