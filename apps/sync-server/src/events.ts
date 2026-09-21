@@ -22,7 +22,16 @@ export type PitchEvent =
   | { type: 'SESSION_END'; ts: number }
   | { type: 'RESET_IDLE'; ts: number }
   | { type: 'HEARTBEAT'; ts: number }
-  | { type: 'PARTICIPATION_RESULT'; ts: number; idempotencyKey: string; name: string | null; code: string | null; productId: string | null; points: number };
+  | {
+      type: 'PARTICIPATION_RESULT';
+      ts: number;
+      idempotencyKey: string;
+      name: string | null;
+      email: string | null;
+      code: string | null;
+      productId: string | null;
+      points: number;
+    };
 
 export const INITIAL_ROOM_STATE: RoomState = {
   status: 'idle',

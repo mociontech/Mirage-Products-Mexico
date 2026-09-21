@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { WebSocket, WebSocketServer } from 'ws';
 import { isPitchEvent, type PitchEvent, type Role } from './events.js';
-import { deliverToDataHub, deliverToRankingDb, fetchRanking } from './gateway.js';
+import { deliverAttendeeToEvius, deliverExperienceToEvius, deliverToRankingDb, fetchRanking } from './gateway.js';
 import { log } from './logger.js';
 import { Outbox } from './outbox.js';
 import { RoomRegistry } from './room.js';
@@ -18,10 +18,35 @@ interface ClientMeta {
 
 const registry = new RoomRegistry();
 const clientMeta = new Map<WebSocket, ClientMeta>();
-const outbox = new Outbox({ dataHub: deliverToDataHub, rankingDb: deliverToRankingDb });
+const outbox = new Outbox({
+  eviusAttendee: deliverAttendeeToEvius,
+  eviusExperience: deliverExperienceToEvius,
+  rankingDb: deliverToRankingDb,
+});
+
+/**
+ * La tablet y el pitch llaman a /ranking por fetch() desde otro origen (la
+ * app corre en el puerto de Vite, este server en el 7777) - sin estos
+ * headers el navegador descarta la respuesta antes de que el codigo la vea,
+ * asi que fetchTopRanking() en el cliente termina en su catch y muestra
+ * "sin resultados" en vez de un error visible. GET-only y sin credenciales,
+ * asi que "*" es seguro aca.
+ */
+function withCors(response: ServerResponse): void {
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
 
 function handleHttpRequest(request: IncomingMessage, response: ServerResponse): void {
   const url = new URL(request.url ?? '/', 'http://localhost');
+  withCors(response);
+
+  if (request.method === 'OPTIONS') {
+    response.writeHead(204);
+    response.end();
+    return;
+  }
 
   if (request.method === 'GET' && url.pathname === '/ranking') {
     const experience = url.searchParams.get('experience') ?? 'catalogo';
@@ -78,11 +103,13 @@ wss.on('connection', (ws, request) => {
 
     log({ event: 'message', roomId, type: parsed.type });
 
-    // No es un evento de UI para el pitch: se encola hacia el data hub y la
-    // DB de rankings (Fase 7) y nunca se reenvia a otros clientes.
+    // No es un evento de UI para el pitch: se encola hacia Evius (attendee +
+    // experience) y hacia la DB de rankings (Fase 7), nunca se reenvia a
+    // otros clientes.
     if (parsed.type === 'PARTICIPATION_RESULT') {
       const payload = { ...parsed, experience: 'catalogo' as const, roomId };
-      outbox.enqueue('dataHub', parsed.idempotencyKey, payload);
+      outbox.enqueue('eviusAttendee', parsed.idempotencyKey, payload);
+      outbox.enqueue('eviusExperience', parsed.idempotencyKey, payload);
       outbox.enqueue('rankingDb', parsed.idempotencyKey, payload);
       return;
     }

@@ -4,15 +4,16 @@ import { useIdleReset } from '../../hooks/useIdleReset';
 import { useSync } from '../../sync/useSync';
 import { Home } from './screens/Home/Home';
 import { ProductSelect } from './screens/ProductSelect/ProductSelect';
+import { Ranking } from './screens/Ranking/Ranking';
 import { Register } from './screens/Register/Register';
 import { Settings } from './screens/Settings/Settings';
 import { ThankYou } from './screens/ThankYou/ThankYou';
-import { EMPTY_SESSION, PARTICIPATION_POINTS, type TabletSession } from './session';
+import { EMPTY_SESSION, generateIdempotencyKey, PARTICIPATION_POINTS, type TabletSession } from './session';
 
 const TABLET_DESIGN_WIDTH = 1920;
 const TABLET_DESIGN_HEIGHT = 1200;
 
-type TabletScreen = 'home' | 'register' | 'productSelect' | 'thankYou' | 'settings';
+type TabletScreen = 'home' | 'register' | 'productSelect' | 'thankYou' | 'ranking' | 'settings';
 
 /**
  * Punto de entrada de la tablet. Controla la pantalla activa del flujo
@@ -89,12 +90,21 @@ export function TabletApp() {
             send({
               type: 'PARTICIPATION_RESULT',
               ts: Date.now(),
-              idempotencyKey: crypto.randomUUID(),
+              idempotencyKey: generateIdempotencyKey(),
               name: session.name,
+              email: session.email,
               code: session.code,
               productId: selectedProductId,
               points: PARTICIPATION_POINTS,
             });
+            setScreen('ranking');
+          }}
+        />
+      )}
+
+      {screen === 'ranking' && (
+        <Ranking
+          onFinish={() => {
             send({ type: 'SESSION_END', ts: Date.now() });
             goHome();
           }}

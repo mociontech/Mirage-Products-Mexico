@@ -1,0 +1,110 @@
+/**
+ * Absolute layout matching Figma's "¡TOP 5!" frame exactly (node 423:178,
+ * design canvas 1920x1200 - see the comment in Home.tsx for why literal px
+ * work here with no unit conversion). Las dos franjas rojas propias de este
+ * frame (mitad de ancho) se dejan afuera a proposito: BrandFrame ya da el
+ * mismo chrome de marca (barras rojas completas + ondas) que el resto de la
+ * tablet, y mantener esa pieza compartida es mas consistente que replicar
+ * una variante de barra unica para esta pantalla.
+ */
+.logo {
+  position: absolute;
+  left: 79px;
+  top: 73px;
+  width: 496px;
+}
+
+.title {
+  position: absolute;
+  left: 50%;
+  top: 250px;
+  width: 1447px;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 6px;
+  font-size: 140px;
+  line-height: 1;
+  color: var(--color-text);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.card {
+  position: absolute;
+  left: 50%;
+  top: 447px;
+  width: 1497px;
+  min-height: 527px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 120px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-4) var(--space-4);
+  background: #ffffff;
+  border-radius: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  width: 498px;
+}
+
+.row {
+  position: relative;
+  margin: 0;
+  padding: var(--space-3) 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-style: italic;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 48px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 3px;
+  background: var(--color-primary);
+}
+
+.score {
+  color: var(--color-primary);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-4);
+  font-family: var(--font-body);
+  color: var(--color-text-muted);
+  font-size: 40px;
+  text-align: center;
+}
+
+.buttonBox {
+  position: absolute;
+  left: 50%;
+  top: 1010px;
+  width: 531px;
+  height: 145px;
+  transform: translateX(-50%);
+}
+
+.finishButton {
+  width: 100% !important;
+  font-size: 70px !important;
+}

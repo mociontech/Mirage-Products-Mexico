@@ -2,7 +2,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { log } from './logger.js';
 
-export type OutboxDestination = 'dataHub' | 'rankingDb';
+export type OutboxDestination = 'eviusAttendee' | 'eviusExperience' | 'rankingDb';
 
 interface OutboxRecord {
   id: string;
