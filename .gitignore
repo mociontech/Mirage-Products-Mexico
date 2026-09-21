@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Secretos reales del deployment (tokens de Evius, service_role key de
+# Supabase) - solo .env.example se versiona.
+.env
+
 # Estado local del sync-server (log rotativo, cola del outbox)
 outbox/
 

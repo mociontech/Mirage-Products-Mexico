@@ -1,61 +1,236 @@
-.center {
+/**
+ * Absolute layout matching Figma's three "02_Registro_Opcional" frames
+ * exactly (nodes 224:2764 form, 224:3009 codeEntry, 224:3145 codeDisplay -
+ * design canvas 1920x1200, see the comment in Register.tsx for why literal
+ * px work here with no unit conversion).
+ */
+.logo {
+  position: absolute;
+  left: 79px;
+  top: 73px;
+  width: 496px;
+}
+
+.titleForm {
+  position: absolute;
+  left: 50%;
+  top: 307.5px;
+  width: 980px;
+  height: 307px;
+  transform: translate(-50%, -50%);
+  margin: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  width: 100%;
-  height: 100%;
-  padding: var(--space-3);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 165px;
+  line-height: 1;
+  color: var(--color-text);
   text-align: center;
 }
 
-.title {
+.titleCode {
+  position: absolute;
+  left: 50%;
+  top: 303.5px;
+  width: 883px;
+  height: 299px;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 2.5rem;
-  margin-bottom: var(--space-2);
+  font-size: 165px;
+  line-height: 1;
+  color: var(--color-text);
+  text-align: center;
 }
+
+/* --- Form view (224:2764) --- */
 
 .form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-2);
-  width: 100%;
-  max-width: 60rem;
+  position: absolute;
+  inset: 0;
 }
 
-.form select {
+.fieldBox {
+  position: absolute;
+  width: 864px;
+  height: 98.48px;
+}
+
+.fieldBox > input {
+  height: 100%;
+}
+
+.nameField {
+  left: 79px;
+  top: 461px;
+}
+
+.companyField {
+  left: 79px;
+  top: 584.1px;
+}
+
+.phoneField {
+  left: 79px;
+  top: 707.2px;
+}
+
+.emailField {
+  left: 974px;
+  top: 461px;
+}
+
+.areaField {
+  left: 974px;
+  top: 587px;
+}
+
+.areaSelect {
+  width: 100%;
+  height: 100%;
+  border: none;
   border-radius: var(--radius-pill);
   background: var(--color-gray);
-  padding: var(--space-2) var(--space-3);
-  font-size: 1.25rem;
+  color: var(--color-text);
+  padding: 0 var(--space-3);
+  font-family: var(--font-body);
+  font-size: 40px;
 }
 
-.submitRow {
-  grid-column: 1 / -1;
+.buttonBox {
+  position: absolute;
+  left: 50%;
+  top: 888px;
+  width: 508px;
+  height: 126px;
+  transform: translateX(-50%);
+}
+
+.ctaButton {
+  width: 100% !important;
+  font-size: 70px !important;
+}
+
+.textLinkUnder {
+  position: absolute;
+  left: 50%;
+  top: 1045px;
+  width: 676px;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 50px;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-align: center;
+}
+
+/*
+ * "Continua sin registro" - text + round arrow button, only on the form
+ * view (Figma drops the round button on the other two Registro screens,
+ * keeping just the plain text link there - see .skipLink below).
+ */
+.skipButton {
+  position: absolute;
+  left: 1503px;
+  top: 1003px;
+  width: 308px;
   display: flex;
-  justify-content: center;
-  margin-top: var(--space-2);
+  align-items: center;
+  gap: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
-.linkRow {
+.skipButtonLabel {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-.textLink {
-  font-size: 1.1rem;
-  text-decoration: underline;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 30px;
+  line-height: 1.35;
   color: var(--color-text);
+  text-align: left;
 }
 
-.helpText {
+.skipButtonArrow {
+  flex: none;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+/* --- codeEntry / codeDisplay shared bits --- */
+
+.idInputBox {
+  position: absolute;
+  left: 50%;
+  top: 453px;
+  transform: translateX(-50%);
+}
+
+.skipLink {
+  position: absolute;
+  left: 1503px;
+  top: 1035px;
+  width: 187px;
+  display: flex;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 30px;
+  line-height: 1.35;
+  color: var(--color-text);
+  text-align: center;
+}
+
+.finishButtonBox {
+  position: absolute;
+  left: 50%;
+  top: 888px;
+  width: 508px;
+  height: 126px;
+  transform: translateX(-50%);
+}
+
+.finishButton {
+  width: 100% !important;
+  font-size: 70px !important;
+  text-transform: uppercase;
+}
+
+.textLinkBelowButton {
+  position: absolute;
+  left: 50%;
+  top: 1062px;
+  width: 676px;
+  transform: translateX(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
   font-family: var(--font-body);
-  font-size: 1.1rem;
+  font-size: 50px;
   color: var(--color-text-muted);
-  max-width: 30rem;
+  text-decoration: underline;
+  text-align: center;
 }

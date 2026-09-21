@@ -1,24 +1,71 @@
-.center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  width: 100%;
-  height: 100%;
+/**
+ * Absolute layout matching Figma's "01_Inicio" frame exactly (node 224:3257,
+ * design canvas 1920x1200 - see the comment in Home.tsx for why literal px
+ * work here with no unit conversion).
+ */
+.logo {
+  position: absolute;
+  left: 284.9px;
+  top: 342px;
+  width: 1371px;
+}
+
+.title {
+  position: absolute;
+  left: 50%;
+  top: 600px;
+  width: 1462px;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 65px;
+  line-height: 1.023;
+  text-transform: uppercase;
+  color: var(--color-text);
   text-align: center;
 }
 
-.tagline {
+.hint {
+  position: absolute;
+  left: 50%;
+  top: 779px;
+  width: 676px;
+  transform: translateX(-50%);
+  margin: 0;
   font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 2.5rem;
-  letter-spacing: 0.05em;
+  font-weight: 400;
+  font-size: 50px;
+  color: var(--color-text-muted);
+  text-decoration: underline;
+  text-align: center;
 }
 
-.hint {
+.buttonBox {
+  position: absolute;
+  left: 50%;
+  top: 877px;
+  width: 531px;
+  height: 145px;
+  transform: translateX(-50%);
+}
+
+.ctaButton {
+  width: 100% !important;
+  font-size: 70px !important;
+  border-radius: var(--radius-md);
+}
+
+.settingsLink {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  background: none;
+  border: none;
+  padding: 8px 12px;
   font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.5rem;
-  text-decoration: underline;
+  font-size: 20px;
+  color: var(--color-text-muted);
+  opacity: 0.5;
+  cursor: pointer;
 }

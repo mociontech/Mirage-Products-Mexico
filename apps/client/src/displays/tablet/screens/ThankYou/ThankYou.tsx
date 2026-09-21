@@ -9,14 +9,24 @@ interface ThankYouProps {
   onFinish: () => void;
 }
 
+/**
+ * Positioned to match Figma exactly (node 224:3181, "04_Agradecimiento",
+ * design canvas 1920x1200 - see the comment in Home.tsx for why literal px
+ * work here with no unit conversion).
+ */
 export function ThankYou({ name, onFinish }: ThankYouProps) {
   return (
     <BrandFrame>
-      <div className={styles.center}>
-        <Logo width={300} />
-        <h1 className={styles.title}>{name ? `GRACIAS, ${name.toUpperCase()}` : 'GRACIAS POR PARTICIPAR'}</h1>
-        <p className={styles.points}>ACUMULASTE {PARTICIPATION_POINTS} PUNTOS</p>
-        <Button onClick={onFinish}>Finalizar</Button>
+      <div className={styles.logo}>
+        <Logo width={496} />
+      </div>
+      <h1 className={styles.title}>{name ? `¡Gracias, ${name}!` : '¡Gracias por participar!'}</h1>
+      <div className={styles.scoreBox}>{PARTICIPATION_POINTS}</div>
+      <p className={styles.label}>Acumulaste</p>
+      <div className={styles.buttonBox}>
+        <Button className={styles.finishButton} onClick={onFinish}>
+          Finalizar
+        </Button>
       </div>
     </BrandFrame>
   );
