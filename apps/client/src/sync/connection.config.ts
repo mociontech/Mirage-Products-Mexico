@@ -13,13 +13,19 @@ export interface SyncConnectionConfig {
 
 /**
  * Host y puerto del sync-server nunca se hardcodean en el bundle: la tablet
- * los lee de storage persistente y, si no hay valor, la pantalla de
- * Settings los pide (gesto oculto para reabrirla en cualquier momento).
+ * los lee de storage persistente, configurable desde Settings (gesto oculto
+ * para reabrirla en cualquier momento) para el caso en que el sync-server
+ * viva en otra maquina/IP.
+ *
+ * Sin ese valor guardado, en vez de no conectar nada (WebSocket y el
+ * ranking silenciosamente inactivos, sin ningun error visible), se usa
+ * como default el mismo host desde el que se sirvio la pagina
+ * (window.location.hostname). Cubre el caso mas comun: sync-server y
+ * cliente corriendo en la misma maquina o publicados bajo el mismo host de
+ * LAN. Settings sigue pudiendo sobreescribirlo para topologias distintas.
  */
-export function getSyncConfig(): SyncConnectionConfig | null {
-  const host = localStorage.getItem(HOST_KEY);
-  if (!host) return null;
-
+export function getSyncConfig(): SyncConnectionConfig {
+  const host = localStorage.getItem(HOST_KEY) || window.location.hostname;
   const portRaw = localStorage.getItem(PORT_KEY);
   const port = portRaw ? Number(portRaw) : DEFAULT_PORT;
   const room = localStorage.getItem(ROOM_KEY) ?? DEFAULT_ROOM;

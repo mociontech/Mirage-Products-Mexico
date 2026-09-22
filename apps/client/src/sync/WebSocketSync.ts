@@ -20,6 +20,15 @@ export class WebSocketSync implements SyncChannel {
   private closedByCaller = false;
   private readonly url: string;
   private readonly role: Role;
+  /**
+   * Cola de eventos mandados antes de que el socket llegue a OPEN (al cargar
+   * la pantalla, o mientras reconecta) - antes se descartaban en silencio,
+   * asi que un tap justo en ese instante (el primero al entrar a
+   * ProductSelect, tipicamente) nunca le llegaba al pitch y habia que tocar
+   * el producto una segunda vez para que "funcionara". Se vacia entera en
+   * cuanto abre, en el mismo orden en que se encolo.
+   */
+  private readonly pendingQueue: PitchEvent[] = [];
 
   constructor(url: string, role: Role) {
     this.url = url;
@@ -34,6 +43,16 @@ export class WebSocketSync implements SyncChannel {
   send(event: PitchEvent): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(event));
+    } else {
+      this.pendingQueue.push(event);
+    }
+  }
+
+  private flushPendingQueue(): void {
+    if (this.socket?.readyState !== WebSocket.OPEN) return;
+    while (this.pendingQueue.length > 0) {
+      const event = this.pendingQueue.shift();
+      if (event) this.socket.send(JSON.stringify(event));
     }
   }
 
@@ -57,7 +76,10 @@ export class WebSocketSync implements SyncChannel {
     socket.addEventListener('open', () => {
       this._status = 'connected';
       this.reconnectAttempt = 0;
-      this.send({ type: 'HELLO', role: this.role, ts: Date.now() });
+      // HELLO primero (el servidor necesita saber el rol antes que nada),
+      // despues lo que se haya encolado mientras el socket no estaba listo.
+      socket.send(JSON.stringify({ type: 'HELLO', role: this.role, ts: Date.now() }));
+      this.flushPendingQueue();
       this.startHeartbeat();
     });
 
