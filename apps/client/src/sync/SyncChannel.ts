@@ -17,19 +17,28 @@ export interface SyncChannel {
 }
 
 /**
- * El receptor descarta eventos mas viejos que el ultimo aplicado (los
- * eventos pueden llegar fuera de orden tras una reconexion). Cada canal
- * mantiene su propio filtro: dos pestanas broadcast y una conexion
- * websocket no comparten nocion de "ultimo evento".
+ * El receptor descarta snapshots STATE_SYNC mas viejos que el ultimo
+ * aplicado (pueden llegar fuera de orden tras una reconexion). Solo se
+ * filtra STATE_SYNC - su `ts` sale siempre del reloj del SERVIDOR
+ * (room.snapshot()), asi que comparar dos snapshots entre si es valido.
  *
- * Devuelve true si el evento es nuevo y debe aplicarse, false si es mas
- * viejo que el ultimo ya aplicado y debe descartarse.
+ * El resto de eventos (PRODUCT_PREVIEW, SESSION_START, etc.) NUNCA se
+ * descartan por ts: viajan sobre una unica conexion WebSocket, que ya
+ * garantiza orden de entrega, y su `ts` lo pone el dispositivo que los
+ * origina (tablet o pitch) - si esos dos relojes no estan sincronizados
+ * entre si (comun: dos tablets/equipos distintos, sin NTP), comparar sus
+ * ts entre dispositivos distintos podia descartar en falso el primer
+ * evento real de una sesion (el reloj de la tablet un poco atras bastaba
+ * para que un solo tap nunca le llegara a la pitch).
+ *
+ * Devuelve true si el evento debe aplicarse, false si debe descartarse.
  */
 export function createEventFreshnessCheck(): (event: PitchEvent) => boolean {
-  let lastAppliedTs = 0;
+  let lastAppliedSnapshotTs = 0;
   return (event: PitchEvent): boolean => {
-    if (event.ts < lastAppliedTs) return false;
-    lastAppliedTs = event.ts;
+    if (event.type !== 'STATE_SYNC') return true;
+    if (event.ts < lastAppliedSnapshotTs) return false;
+    lastAppliedSnapshotTs = event.ts;
     return true;
   };
 }

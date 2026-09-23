@@ -42,8 +42,12 @@ export class WebSocketSync implements SyncChannel {
 
   send(event: PitchEvent): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
+      // eslint-disable-next-line no-console
+      console.debug('[sync] send', this.role, event.type, 'productId' in event ? event.productId : undefined);
       this.socket.send(JSON.stringify(event));
     } else {
+      // eslint-disable-next-line no-console
+      console.debug('[sync] queued (socket not open)', this.role, event.type, this.socket?.readyState);
       this.pendingQueue.push(event);
     }
   }
@@ -90,7 +94,18 @@ export class WebSocketSync implements SyncChannel {
       } catch {
         return;
       }
-      if (!isPitchEvent(parsed) || !this.isFresh(parsed)) return;
+      if (!isPitchEvent(parsed)) {
+        // eslint-disable-next-line no-console
+        console.debug('[sync] recv invalid payload', this.role, parsed);
+        return;
+      }
+      if (!this.isFresh(parsed)) {
+        // eslint-disable-next-line no-console
+        console.debug('[sync] recv DISCARDED (stale ts)', this.role, parsed.type, parsed.ts);
+        return;
+      }
+      // eslint-disable-next-line no-console
+      console.debug('[sync] recv', this.role, parsed.type, 'productId' in parsed ? parsed.productId : undefined);
       for (const handler of this.handlers) handler(parsed);
     });
 
