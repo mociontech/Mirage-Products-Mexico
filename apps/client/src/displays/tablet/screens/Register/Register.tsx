@@ -3,7 +3,10 @@ import { BrandFrame } from '../../../../components/BrandFrame/BrandFrame';
 import { Button } from '../../../../components/Button/Button';
 import { IdInput } from '../../../../components/IdInput/IdInput';
 import { Logo } from '../../../../components/Logo/Logo';
+import { Modal } from '../../../../components/Modal';
+import modalStyles from '../../../../components/Modal/Modal.module.css';
 import { TextField } from '../../../../components/TextField/TextField';
+import { checkEmailUsedRemotely, hasEmailPlayedLocally, rememberUsedEmail } from '../../../../services/idService';
 import { EMPTY_SESSION, generateParticipantCode, type TabletSession } from '../../session';
 import styles from './Register.module.css';
 
@@ -22,6 +25,14 @@ type RegisterView = 'form' | 'codeEntry' | 'codeDisplay';
  * llega en la Fase 7 (outbox/data hub); por ahora un codigo de 6 digitos
  * bien formado alcanza para identificar la sesion.
  *
+ * Antes de esto, esta pantalla no avisaba si el correo ya habia
+ * participado - el insert final se rechazaba en silencio por el unique
+ * constraint de Supabase, pero la persona nunca se enteraba de que no
+ * conto. Ahora, igual que Memory Match/las apps de celular: primero un
+ * chequeo local (hasEmailPlayedLocally, instantaneo, esta misma tablet), y
+ * si pasa, uno real contra el sync-server (checkEmailUsedRemotely, con
+ * timeout corto - nunca bloquea el registro si no hay internet).
+ *
  * Las tres vistas estan posicionadas exactas a Figma (nodos 224:2764,
  * 224:3009, 224:3145 - design canvas 1920x1200; ScaleViewport escala todo el
  * canvas de forma uniforme, asi que los px literales de Figma sirven como
@@ -39,10 +50,29 @@ export function Register({ onComplete }: RegisterProps) {
   const [area, setArea] = useState(AREAS[0]);
   const [generatedCode, setGeneratedCode] = useState('');
   const [enteredCode, setEnteredCode] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [showAdvertencia, setShowAdvertencia] = useState(false);
 
   const skip = () => onComplete(EMPTY_SESSION);
 
-  const submitForm = () => {
+  const submitForm = async () => {
+    if (checking) return;
+    const trimmedEmail = email.trim();
+
+    if (hasEmailPlayedLocally(trimmedEmail)) {
+      setShowAdvertencia(true);
+      return;
+    }
+
+    setChecking(true);
+    const usedRemotely = await checkEmailUsedRemotely(trimmedEmail);
+    setChecking(false);
+    if (usedRemotely) {
+      rememberUsedEmail(trimmedEmail);
+      setShowAdvertencia(true);
+      return;
+    }
+
     setGeneratedCode(generateParticipantCode());
     setView('codeDisplay');
   };
@@ -104,7 +134,7 @@ export function Register({ onComplete }: RegisterProps) {
         className={styles.form}
         onSubmit={(event) => {
           event.preventDefault();
-          submitForm();
+          void submitForm();
         }}
       >
         <div className={`${styles.fieldBox} ${styles.nameField}`}>
@@ -140,8 +170,8 @@ export function Register({ onComplete }: RegisterProps) {
           </select>
         </div>
         <div className={styles.buttonBox}>
-          <Button className={styles.ctaButton} type="submit">
-            Comenzar
+          <Button className={styles.ctaButton} type="submit" disabled={checking}>
+            {checking ? 'Verificando...' : 'Comenzar'}
           </Button>
         </div>
       </form>
@@ -157,6 +187,20 @@ export function Register({ onComplete }: RegisterProps) {
           →
         </span>
       </button>
+
+      <Modal open={showAdvertencia} onClose={() => setShowAdvertencia(false)}>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M12 2L1 21h22L12 2z"
+            stroke="var(--color-primary)"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <path d="M12 9v5" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="12" cy="17" r="1" fill="var(--color-primary)" />
+        </svg>
+        <p className={modalStyles.text}>Parece que ya participaste en esta experiencia. ¡Gracias!</p>
+      </Modal>
     </BrandFrame>
   );
 }

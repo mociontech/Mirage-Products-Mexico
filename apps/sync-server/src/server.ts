@@ -1,7 +1,13 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { WebSocket, WebSocketServer } from 'ws';
 import { isPitchEvent, type PitchEvent, type Role } from './events.js';
-import { deliverAttendeeToEvius, deliverExperienceToEvius, deliverToRankingDb, fetchRanking } from './gateway.js';
+import {
+  checkParticipantExists,
+  deliverAttendeeToEvius,
+  deliverExperienceToEvius,
+  deliverToRankingDb,
+  fetchRanking,
+} from './gateway.js';
 import { log } from './logger.js';
 import { Outbox } from './outbox.js';
 import { RoomRegistry } from './room.js';
@@ -54,6 +60,26 @@ function handleHttpRequest(request: IncomingMessage, response: ServerResponse): 
       if (result.status === 'ok') {
         response.writeHead(200, { 'Content-Type': 'application/json' });
         response.end(JSON.stringify(result.data));
+        return;
+      }
+      response.writeHead(503, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: `ranking_db_${result.status}` }));
+    });
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/check-participant') {
+    const email = url.searchParams.get('email');
+    const experience = url.searchParams.get('experience') ?? 'catalogo';
+    if (!email) {
+      response.writeHead(400, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: 'missing_email' }));
+      return;
+    }
+    checkParticipantExists(email, experience).then((result) => {
+      if (result.status === 'ok') {
+        response.writeHead(200, { 'Content-Type': 'application/json' });
+        response.end(JSON.stringify({ exists: result.exists }));
         return;
       }
       response.writeHead(503, { 'Content-Type': 'application/json' });

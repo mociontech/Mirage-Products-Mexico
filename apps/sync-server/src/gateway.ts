@@ -276,3 +276,39 @@ export async function fetchRanking(experience: string): Promise<RankingResult> {
     return { status: 'unavailable' };
   }
 }
+
+export type ParticipantCheckResult = { status: 'not_configured' } | { status: 'unavailable' } | { status: 'ok'; exists: boolean };
+
+/**
+ * Verifica si un correo ya participo en esta experiencia+pais, consultando
+ * la tabla base `participations` directo (la service_role key de este
+ * servidor puede hacer SELECT ahi, a diferencia de la Publishable key que
+ * usan las apps de celular - por eso este chequeo vive aca y no en el
+ * cliente de la tablet). Antes de esto, Register.tsx no tenia forma de
+ * avisarle a nadie que ya habia participado - el insert final se rechazaba
+ * en silencio por el unique constraint (participant_id, country,
+ * experience) de Supabase, pero el participante nunca se enteraba.
+ */
+export async function checkParticipantExists(email: string, experience: string): Promise<ParticipantCheckResult> {
+  if (!RANKING_DB_URL || !RANKING_DB_API_KEY) return { status: 'not_configured' };
+  if (!COUNTRY) return { status: 'not_configured' };
+
+  const query = new URLSearchParams({
+    participant_id: `eq.${normalizeEmail(email)}`,
+    country: `eq.${COUNTRY}`,
+    experience: `eq.${experience}`,
+    select: 'participant_id',
+    limit: '1',
+  });
+
+  try {
+    const response = await fetch(`${RANKING_DB_URL}/rest/v1/participations?${query.toString()}`, {
+      headers: { apikey: RANKING_DB_API_KEY, Authorization: `Bearer ${RANKING_DB_API_KEY}` },
+    });
+    if (!response.ok) return { status: 'unavailable' };
+    const rows = (await response.json()) as unknown[];
+    return { status: 'ok', exists: Array.isArray(rows) && rows.length > 0 };
+  } catch {
+    return { status: 'unavailable' };
+  }
+}
