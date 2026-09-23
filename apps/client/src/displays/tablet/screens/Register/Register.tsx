@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import iconArrowRight from '../../../../assets/images/icon-arrow-right.svg';
 import { BrandFrame } from '../../../../components/BrandFrame/BrandFrame';
 import { Button } from '../../../../components/Button/Button';
 import { IdInput } from '../../../../components/IdInput/IdInput';
@@ -80,21 +81,21 @@ export function Register({ onComplete }: RegisterProps) {
   if (view === 'codeEntry') {
     return (
       <BrandFrame>
-        <div className={styles.logo}>
+        <div className={`${styles.logo} enterFromTop`}>
           <Logo width={496} />
         </div>
-        <h1 className={styles.titleCode}>CÓDIGO ID</h1>
-        <div className={styles.idInputBox}>
+        <h1 className={`${styles.titleCode} enterFromLeft delay1`}>CÓDIGO ID</h1>
+        <div className={`${styles.idInputBox} enterFromBottom delay2`}>
           <IdInput
             value={enteredCode}
             onChange={setEnteredCode}
             onComplete={(code) => onComplete({ name: null, email: null, code })}
           />
         </div>
-        <button type="button" className={styles.textLinkUnder} onClick={() => setView('form')}>
+        <button type="button" className={`${styles.textLinkUnder} enterFade delay3`} onClick={() => setView('form')}>
           ir a Registro
         </button>
-        <button type="button" className={styles.skipLink} onClick={skip}>
+        <button type="button" className={`${styles.skipLink} enterFade delay4`} onClick={skip}>
           <span>Continua</span>
           <span>sin registro</span>
         </button>
@@ -105,19 +106,19 @@ export function Register({ onComplete }: RegisterProps) {
   if (view === 'codeDisplay') {
     return (
       <BrandFrame>
-        <div className={styles.logo}>
+        <div className={`${styles.logo} enterFromTop`}>
           <Logo width={496} />
         </div>
-        <h1 className={styles.titleCode}>CÓDIGO ID</h1>
-        <div className={styles.idInputBox}>
+        <h1 className={`${styles.titleCode} enterFromLeft delay1`}>CÓDIGO ID</h1>
+        <div className={`${styles.idInputBox} enterScale delay2`}>
           <IdInput value={generatedCode} onChange={() => {}} readOnly />
         </div>
-        <div className={styles.finishButtonBox}>
+        <div className={`${styles.finishButtonBox} enterFromBottom delay3`}>
           <Button className={styles.finishButton} onClick={() => onComplete({ name: name || null, email: email || null, code: generatedCode })}>
             Finalizar
           </Button>
         </div>
-        <button type="button" className={styles.textLinkBelowButton} onClick={() => setView('form')}>
+        <button type="button" className={`${styles.textLinkBelowButton} enterFade delay4`} onClick={() => setView('form')}>
           ir a Registro
         </button>
       </BrandFrame>
@@ -126,12 +127,12 @@ export function Register({ onComplete }: RegisterProps) {
 
   return (
     <BrandFrame>
-      <div className={styles.logo}>
+      <div className={`${styles.logo} enterFromTop`}>
         <Logo width={496} />
       </div>
-      <h1 className={styles.titleForm}>REGISTRO</h1>
+      <h1 className={`${styles.titleForm} enterFromLeft delay1`}>REGISTRO</h1>
       <form
-        className={styles.form}
+        className={`${styles.form} enterFromBottom delay2`}
         onSubmit={(event) => {
           event.preventDefault();
           void submitForm();
@@ -168,6 +169,9 @@ export function Register({ onComplete }: RegisterProps) {
               </option>
             ))}
           </select>
+          <svg className={styles.areaSelectArrow} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         </div>
         <div className={styles.buttonBox}>
           <Button className={styles.ctaButton} type="submit" disabled={checking}>
@@ -175,16 +179,16 @@ export function Register({ onComplete }: RegisterProps) {
           </Button>
         </div>
       </form>
-      <button type="button" className={styles.textLinkUnder} onClick={() => setView('codeEntry')}>
+      <button type="button" className={`${styles.textLinkUnder} enterFade delay3`} onClick={() => setView('codeEntry')}>
         ó ingresa tu ID
       </button>
-      <button type="button" className={styles.skipButton} onClick={skip}>
+      <button type="button" className={`${styles.skipButton} enterFade delay4`} onClick={skip}>
         <span className={styles.skipButtonLabel}>
           <span>Continua</span>
           <span>sin registro</span>
         </span>
         <span className={styles.skipButtonArrow} aria-hidden="true">
-          →
+          <img src={iconArrowRight} alt="" className={styles.skipButtonArrowIcon} />
         </span>
       </button>
 

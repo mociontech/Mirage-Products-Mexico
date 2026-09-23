@@ -98,9 +98,28 @@
   border-radius: var(--radius-pill);
   background: var(--color-gray);
   color: var(--color-text);
-  padding: 0 var(--space-3);
+  padding: 0 64px 0 var(--space-3);
   font-family: var(--font-body);
   font-size: 40px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/*
+ * Flecha nativa del <select> apagada arriba (appearance: none) y
+ * reemplazada por esta, para poder controlar su tamano/posicion - el doble
+ * de grande que una flecha de dropdown tipica (16px -> 32px) y corrida
+ * 10px a la izquierda de donde cae por defecto.
+ */
+.areaSelectArrow {
+  position: absolute;
+  top: 50%;
+  right: calc(24px + 10px);
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  color: var(--color-text);
+  pointer-events: none;
 }
 
 .buttonBox {
@@ -173,7 +192,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+}
+
+/* Figma node 535:1287 - flecha roja original, recoloreada a blanco aca porque
+   en este diseno va dentro del circulo rojo (roja sobre rojo seria invisible).
+   Ancho fijo a poco mas de la mitad del circulo, alto libre respetando su
+   proporcion real (901.238x571.565) para que no quede estirada ni recortada. */
+.skipButtonArrowIcon {
+  width: 66px;
+  height: auto;
+  aspect-ratio: 901.238 / 571.565;
 }
 
 /* --- codeEntry / codeDisplay shared bits --- */
