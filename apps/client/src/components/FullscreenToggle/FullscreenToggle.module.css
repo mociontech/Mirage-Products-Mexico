@@ -1,0 +1,28 @@
+.button {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: none;
+  border-radius: 999px;
+  color: #ffffff;
+  opacity: 0.35;
+  cursor: pointer;
+  z-index: 9999;
+  transition: opacity 150ms ease;
+}
+
+.button:hover,
+.button:focus-visible {
+  opacity: 0.9;
+}
+
+.button svg {
+  width: 22px;
+  height: 22px;
+}

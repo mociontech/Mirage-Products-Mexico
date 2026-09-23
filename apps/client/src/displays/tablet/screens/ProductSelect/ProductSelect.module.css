@@ -34,11 +34,36 @@
   padding: 0;
   cursor: pointer;
   z-index: 1;
+  /* transform/opacity en su propia capa de composicion - el navegador no
+     tiene que repintar el resto de la pantalla cuando esto anima. */
+  will-change: transform, opacity;
 }
 
 .tile.selected {
   border-color: var(--color-text);
   background: rgba(255, 255, 255, 0.12);
+}
+
+/*
+ * Pulso al seleccionar - nunca en el montaje (evita que los 12 tiles
+ * animen juntos al entrar a la pantalla). Se reinicia a mano en
+ * ProductSelect.tsx quitando y volviendo a poner esta clase sobre el mismo
+ * boton, asi nunca hace falta destruir/recrear la imagen para repetir la
+ * animacion.
+ */
+.tile.pulsing {
+  animation: tilePulse 320ms ease-out;
+}
+
+@keyframes tilePulse {
+  from {
+    transform: scale(0.92);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .tilePhoto {

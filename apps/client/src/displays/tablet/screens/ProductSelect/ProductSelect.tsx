@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { BrandFrame } from '../../../../components/BrandFrame/BrandFrame';
 import { Button } from '../../../../components/Button/Button';
 import { getProductById } from '../../../../content/products';
@@ -18,8 +19,26 @@ interface ProductSelectProps {
  * tres filas separadas por la franja roja horizontal a la mitad de la
  * pantalla. Cada tile es una zona tactil que emite PRODUCT_PREVIEW; el pitch
  * reacciona en vivo mientras el usuario explora.
+ *
+ * Al seleccionar un producto, el tile pulsa (escala + fade) - el boton
+ * nunca se remonta (destruiria y redecodificaria las imagenes en cada
+ * toque = lag notorio); la animacion se reinicia a mano quitando y
+ * volviendo a poner la clase sobre el mismo nodo del DOM.
  */
 export function ProductSelect({ selectedProductId, onPreview, onConfirm }: ProductSelectProps) {
+  const [pulseNonce, setPulseNonce] = useState(0);
+  const tileRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  useEffect(() => {
+    if (!selectedProductId) return;
+    const el = tileRefs.current[selectedProductId];
+    if (!el) return;
+    el.classList.remove(styles.pulsing);
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+    el.offsetWidth; // fuerza reflow para que el navegador "olvide" el estado anterior de la animacion
+    el.classList.add(styles.pulsing);
+  }, [selectedProductId, pulseNonce]);
+
   return (
     <BrandFrame>
       <p className={styles.hint}>Toca y explora</p>
@@ -36,11 +55,17 @@ export function ProductSelect({ selectedProductId, onPreview, onConfirm }: Produ
         return (
           <button
             key={product.id}
+            ref={(el) => {
+              tileRefs.current[product.id] = el;
+            }}
             type="button"
             aria-label={product.name}
             className={`${styles.tile} ${product.id === selectedProductId ? styles.selected : ''}`}
             style={{ left, top, width: right - left, height: bottom - top }}
-            onClick={() => onPreview(product.id)}
+            onClick={() => {
+              onPreview(product.id);
+              setPulseNonce((count) => count + 1);
+            }}
           >
             <img
               src={product.tileImage}
