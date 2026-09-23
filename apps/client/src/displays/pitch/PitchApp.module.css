@@ -7,6 +7,9 @@
 .layer {
   position: absolute;
   inset: 0;
-  transition: opacity 600ms ease;
+  /* Antes 600ms: al primer tap de la sesion, este fundido (capa
+     attract/idle -> productContent) se sumaba al fundido propio de
+     ProductContent (ver FADE_MS) y el cambio se sentia atascado/doble. */
+  transition: opacity 260ms ease;
   pointer-events: none;
 }

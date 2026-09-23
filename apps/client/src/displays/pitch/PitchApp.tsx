@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ScaleViewport } from '../../components/ScaleViewport/ScaleViewport';
-import { getProductById } from '../../content/products';
+import { getProductById, products } from '../../content/products';
 import { useWatchdog } from '../../hooks/useWatchdog';
 import { useSync } from '../../sync/useSync';
 import styles from './PitchApp.module.css';
@@ -27,6 +27,25 @@ export function PitchApp() {
   useEffect(() => {
     persistPitchState({ state, productId });
   }, [state, productId]);
+
+  // Precarga (fetch + decode) los 12 banners de producto apenas monta la
+  // pitch, mientras esta en IDLE - antes cada uno se pedia recien al
+  // tocarlo en la tablet, y el fade de ProductContent (260ms) casi nunca
+  // le alcanzaba a la imagen para llegar a tiempo: se veia el banner
+  // aparecer a medias o en blanco un instante. Con esto ya estan en cache
+  // del navegador para cuando el visitante empieza a explorar.
+  useEffect(() => {
+    for (const p of products) {
+      const img = new Image();
+      img.src = p.pitchImage;
+      // decode() fuerza el decode real del bitmap (no solo la descarga de
+      // bytes) para que quede listo para pintar sin costo la primera vez
+      // que un <img> use esta misma URL - decode() puede no existir en
+      // navegadores viejos, de ahi el optional chaining + catch mudo (no
+      // es fatal, solo se pierde el adelanto).
+      img.decode?.().catch(() => {});
+    }
+  }, []);
 
   useWatchdog(lastEvent, () => {
     setState('idle');
