@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ScaleViewport } from '../../components/ScaleViewport/ScaleViewport';
+import { products } from '../../content/products';
 import { useIdleReset } from '../../hooks/useIdleReset';
 import { useSync } from '../../sync/useSync';
 import { Home } from './screens/Home/Home';
@@ -8,7 +9,7 @@ import { Ranking } from './screens/Ranking/Ranking';
 import { Register } from './screens/Register/Register';
 import { Settings } from './screens/Settings/Settings';
 import { ThankYou } from './screens/ThankYou/ThankYou';
-import { EMPTY_SESSION, generateIdempotencyKey, PARTICIPATION_POINTS, type TabletSession } from './session';
+import { computeParticipationScore, EMPTY_SESSION, generateIdempotencyKey, type TabletSession } from './session';
 
 const TABLET_DESIGN_WIDTH = 1920;
 const TABLET_DESIGN_HEIGHT = 1200;
@@ -26,12 +27,16 @@ export function TabletApp() {
   const [screenBeforeSettings, setScreenBeforeSettings] = useState<TabletScreen>('home');
   const [session, setSession] = useState<TabletSession>(EMPTY_SESSION);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  // Cada tile que el visitante toca en ProductSelect (onPreview) se agrega
+  // aca, sin duplicados - es la base del puntaje (ver session.ts#computeParticipationScore).
+  const [viewedProductIds, setViewedProductIds] = useState<string[]>([]);
   const { send } = useSync('tablet');
 
   const goHome = () => {
     setScreen('home');
     setSession(EMPTY_SESSION);
     setSelectedProductId(null);
+    setViewedProductIds([]);
   };
 
   useIdleReset(() => {
@@ -44,6 +49,8 @@ export function TabletApp() {
     setScreenBeforeSettings(screen);
     setScreen('settings');
   };
+
+  const points = computeParticipationScore(viewedProductIds, products.length);
 
   return (
     <ScaleViewport designWidth={TABLET_DESIGN_WIDTH} designHeight={TABLET_DESIGN_HEIGHT}>
@@ -71,6 +78,7 @@ export function TabletApp() {
           selectedProductId={selectedProductId}
           onPreview={(productId) => {
             setSelectedProductId(productId);
+            setViewedProductIds((prev) => (prev.includes(productId) ? prev : [...prev, productId]));
             send({ type: 'PRODUCT_PREVIEW', productId, ts: Date.now() });
           }}
           onConfirm={(productId) => {
@@ -83,6 +91,7 @@ export function TabletApp() {
       {screen === 'thankYou' && (
         <ThankYou
           name={session.name}
+          points={points}
           onFinish={() => {
             // El resultado de la sesion viaja aparte de los eventos de UI del
             // pitch: el sync-server lo encola hacia el data hub y la DB de
@@ -95,7 +104,7 @@ export function TabletApp() {
               email: session.email,
               code: session.code,
               productId: selectedProductId,
-              points: PARTICIPATION_POINTS,
+              points,
             });
             setScreen('ranking');
           }}

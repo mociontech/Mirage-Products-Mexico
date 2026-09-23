@@ -8,12 +8,16 @@ export interface TabletSession {
 export const EMPTY_SESSION: TabletSession = { name: null, email: null, code: null };
 
 /**
- * Puntos por participacion completa (seleccionar un producto y llegar a
- * Agradecimiento). Fijo en 100: el catalogo siempre otorga el maximo, el
- * memory match aporta 0-100 segun desempeno, y el ranking final promedia
- * ambas experiencias.
+ * Puntaje segun cuantos productos DISTINTOS exploro el visitante (tocando
+ * un tile en ProductSelect, ver TabletApp.tsx) sobre el total del catalogo,
+ * redondeado - ya no es un fijo en 100. Mismo criterio en las 4 apps que
+ * alimentan "catalogo" (tablet+pitch y movil, CO+MX), para que el ranking
+ * combinado con memory_match siga siendo comparable entre dispositivos.
  */
-export const PARTICIPATION_POINTS = 100;
+export function computeParticipationScore(viewedProductIds: readonly string[], totalProducts: number): number {
+  if (totalProducts <= 0) return 0;
+  return Math.round((viewedProductIds.length / totalProducts) * 100);
+}
 
 export function generateParticipantCode(): string {
   return String(Math.floor(100_000 + Math.random() * 900_000));
