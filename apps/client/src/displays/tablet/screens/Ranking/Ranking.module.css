@@ -36,12 +36,11 @@
   position: absolute;
   left: 50%;
   top: 447px;
-  width: 1497px;
+  width: 900px;
   min-height: 527px;
   transform: translateX(-50%);
   display: flex;
-  gap: 120px;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   padding: var(--space-4) var(--space-4);
   background: #ffffff;
@@ -52,7 +51,7 @@
 .column {
   display: flex;
   flex-direction: column;
-  width: 498px;
+  width: 100%;
 }
 
 .row {
@@ -95,16 +94,3 @@
   text-align: center;
 }
 
-.buttonBox {
-  position: absolute;
-  left: 50%;
-  top: 1010px;
-  width: 531px;
-  height: 145px;
-  transform: translateX(-50%);
-}
-
-.finishButton {
-  width: 100% !important;
-  font-size: 70px !important;
-}

@@ -83,6 +83,11 @@ export function TabletApp() {
           }}
           onConfirm={(productId) => {
             send({ type: 'PRODUCT_SELECTED', productId, ts: Date.now() });
+            // Al confirmar, la tablet sigue su flujo (ThankYou -> Ranking)
+            // pero la pitch ya termino su parte: debe volver a reposo de
+            // inmediato, no quedarse mostrando el ultimo producto hasta que
+            // el ranking termine su temporizador.
+            send({ type: 'RESET_IDLE', ts: Date.now() });
             setScreen('thankYou');
           }}
         />
