@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import logoMirage from '../../../../assets/images/logo-mirage-select.svg';
 import { BrandFrame } from '../../../../components/BrandFrame/BrandFrame';
-import { Button } from '../../../../components/Button/Button';
 import { getProductById } from '../../../../content/products';
 import styles from './ProductSelect.module.css';
-import { productTiles } from './tiles';
+import { productCards, productTiles } from './tiles';
 
 interface ProductSelectProps {
   selectedProductId: string | null;
@@ -12,13 +12,15 @@ interface ProductSelectProps {
 }
 
 /**
- * Layout final de seleccion de producto (Figma node 224:2810,
- * "03_Pantalla seleccion_productos", canvas 1920x1200 - ver comentario en
- * Home.tsx sobre por que los px literales sirven de coordenadas absolutas).
- * Los 12 tiles (foto + logo real de marca, ver tiles.ts) estan repartidos en
- * tres filas separadas por la franja roja horizontal a la mitad de la
- * pantalla. Cada tile es una zona tactil que emite PRODUCT_PREVIEW; el pitch
- * reacciona en vivo mientras el usuario explora.
+ * Layout final de seleccion de producto (Figma node 526:946,
+ * "03_Pantalla seleccion_productos" - version vigente, canvas 1920x1200 -
+ * ver comentario en Home.tsx sobre por que los px literales sirven de
+ * coordenadas absolutas). Los 12 tiles (foto + logo real de marca, ver
+ * tiles.ts) estan en 3 filas de 4 columnas; la fila del medio queda sobre
+ * la franja roja horizontal. Cada tile es una tarjeta con fondo degradado
+ * (ver tiles.ts#productCards, antes ausente) + foto y logo encima en su
+ * posicion exacta. Cada tile es una zona tactil que emite PRODUCT_PREVIEW;
+ * el pitch reacciona en vivo mientras el usuario explora.
  *
  * Al seleccionar un producto, el tile pulsa (escala + fade) - el boton
  * nunca se remonta (destruiria y redecodificaria las imagenes en cada
@@ -41,16 +43,14 @@ export function ProductSelect({ selectedProductId, onPreview, onConfirm }: Produ
 
   return (
     <BrandFrame>
-      <p className={styles.hint}>Toca y explora</p>
+      <img src={logoMirage} alt="Mirage" className={`${styles.logo} enterFromTop`} />
       <div className={styles.redBand} />
 
-      {productTiles.map((tile) => {
+      {productTiles.map((tile, index) => {
         const product = getProductById(tile.productId);
-        if (!product) return null;
-        const left = Math.min(tile.photo.x, tile.logo.x);
-        const top = Math.min(tile.photo.y, tile.logo.y);
-        const right = Math.max(tile.photo.x + tile.photo.width, tile.logo.x + tile.logo.width);
-        const bottom = Math.max(tile.photo.y + tile.photo.height, tile.logo.y + tile.logo.height);
+        const card = productCards[tile.productId];
+        if (!product || !card) return null;
+        const isSelected = product.id === selectedProductId;
 
         return (
           <button
@@ -60,8 +60,8 @@ export function ProductSelect({ selectedProductId, onPreview, onConfirm }: Produ
             }}
             type="button"
             aria-label={product.name}
-            className={`${styles.tile} ${product.id === selectedProductId ? styles.selected : ''}`}
-            style={{ left, top, width: right - left, height: bottom - top }}
+            className={`${styles.tile} ${card.variant === 'red' ? styles.tileRed : styles.tileLight} ${isSelected ? styles.selected : ''} enterScale`}
+            style={{ left: card.x, top: card.y, width: card.width, height: card.height, animationDelay: `${index * 45}ms` }}
             onClick={() => {
               onPreview(product.id);
               setPulseNonce((count) => count + 1);
@@ -72,8 +72,8 @@ export function ProductSelect({ selectedProductId, onPreview, onConfirm }: Produ
               alt=""
               className={styles.tilePhoto}
               style={{
-                left: tile.photo.x - left,
-                top: tile.photo.y - top,
+                left: tile.photo.x - card.x,
+                top: tile.photo.y - card.y,
                 width: tile.photo.width,
                 height: tile.photo.height,
               }}
@@ -83,8 +83,8 @@ export function ProductSelect({ selectedProductId, onPreview, onConfirm }: Produ
               alt={product.name}
               className={styles.tileLogo}
               style={{
-                left: tile.logo.x - left,
-                top: tile.logo.y - top,
+                left: tile.logo.x - card.x,
+                top: tile.logo.y - card.y,
                 width: tile.logo.width,
                 height: tile.logo.height,
               }}
@@ -92,7 +92,7 @@ export function ProductSelect({ selectedProductId, onPreview, onConfirm }: Produ
             {tile.capacityLabel && (
               <span
                 className={styles.capacityLabel}
-                style={{ left: tile.capacityLabel.x - left, top: tile.capacityLabel.y - top }}
+                style={{ left: tile.capacityLabel.x - card.x, top: tile.capacityLabel.y - card.y }}
               >
                 {tile.capacityLabel.text}
               </span>
@@ -102,9 +102,13 @@ export function ProductSelect({ selectedProductId, onPreview, onConfirm }: Produ
       })}
 
       {selectedProductId && (
-        <div className={styles.confirmRow}>
-          <Button onClick={() => onConfirm(selectedProductId)}>Continuar</Button>
-        </div>
+        <button
+          type="button"
+          className={`${styles.confirmButton} enterFromRight`}
+          onClick={() => onConfirm(selectedProductId)}
+        >
+          Continuar
+        </button>
       )}
     </BrandFrame>
   );

@@ -1,47 +1,69 @@
 /**
  * Absolute layout matching Figma's "03_Pantalla seleccion_productos" frame
- * exactly (node 224:2810, design canvas 1920x1200 - see the comment in
- * Home.tsx for why literal px work here with no unit conversion).
+ * exactly (node 526:946 - version vigente, design canvas 1920x1200 - see
+ * the comment in Home.tsx for why literal px work here with no unit
+ * conversion). Todos los valores salen de get_metadata (x/y/width/height
+ * reales por nodo), no de porcentajes de inset redondeados a mano.
  */
-.hint {
+/* Logo "mirage" (node 526:1011). */
+.logo {
   position: absolute;
-  top: 24px;
-  right: 24px;
-  margin: 0;
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 32px;
-  color: var(--color-text-muted);
+  left: 777px;
+  top: 35px;
+  width: 366px;
+  height: 53px;
   z-index: 2;
 }
 
-/* "Rectangle 82" - franja roja horizontal que separa la fila superior de la inferior. */
+/* "Rectangle 83" - franja roja horizontal en medio de la pantalla (node 526:948). */
 .redBand {
   position: absolute;
   left: 0;
-  top: 889px;
+  top: 450px;
   width: 1920px;
-  height: 311px;
+  height: 350px;
   background: var(--color-primary);
   z-index: 0;
 }
 
+/*
+ * Tile = la tarjeta redondeada con degradado (nodos Rectangle 98/102/103/104,
+ * 95/105/106/107 en Figma) - antes el "tile" era solo el bounding box
+ * invisible de foto+logo, sin ningun fondo. radius/shadow identicos en las
+ * 12; solo cambia el degradado segun si esta en fila blanca o en la fila
+ * roja del medio.
+ */
 .tile {
   position: absolute;
-  background: none;
-  border: 3px solid transparent;
-  border-radius: var(--radius-sm);
+  border: none;
+  border-radius: 33px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.09);
   padding: 0;
   cursor: pointer;
   z-index: 1;
-  /* transform/opacity en su propia capa de composicion - el navegador no
-     tiene que repintar el resto de la pantalla cuando esto anima. */
   will-change: transform, opacity;
 }
 
-.tile.selected {
-  border-color: var(--color-text);
-  background: rgba(255, 255, 255, 0.12);
+.tileLight {
+  background: linear-gradient(180deg, #f4f5f5 0%, #e8e8e8 100%);
+}
+
+.tileRed {
+  background: linear-gradient(180deg, #ff0531 0%, #df032a 100%);
+}
+
+/*
+ * Borde de seleccion: rojo brillante sobre tarjetas claras, blanco sobre las
+ * rojas de la franja central - en ambos casos un halo desvanecido (glow),
+ * no una linea solida, para que se note la opcion elegida sin tapar la
+ * tarjeta.
+ */
+.tileLight.selected {
+  box-shadow: 0 0 0 3px rgba(234, 0, 41, 0.65), 0 0 14px 3px rgba(234, 0, 41, 0.3), 0 4px 4px rgba(0, 0, 0, 0.09);
+}
+
+.tileRed.selected {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.65), 0 0 14px 3px rgba(255, 255, 255, 0.3), 0 4px 4px rgba(0, 0, 0, 0.09);
 }
 
 /*
@@ -84,15 +106,27 @@
   white-space: nowrap;
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 22px;
-  color: var(--color-text);
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #98989a;
   pointer-events: none;
 }
 
-.confirmRow {
+/* Boton "Comenzar" (node 540:1294) - rojo con texto blanco, arriba a la derecha. */
+.confirmButton {
   position: absolute;
-  bottom: 40px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 1641px;
+  top: 38px;
+  width: 218px;
+  height: 54px;
   z-index: 2;
+  border: none;
+  border-radius: 7px;
+  background: var(--color-primary);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 30px;
+  cursor: pointer;
 }
