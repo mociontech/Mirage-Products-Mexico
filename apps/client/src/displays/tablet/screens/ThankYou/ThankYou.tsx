@@ -18,13 +18,13 @@ interface ThankYouProps {
 export function ThankYou({ name, points, onFinish }: ThankYouProps) {
   return (
     <BrandFrame>
-      <div className={styles.logo}>
+      <div className={`${styles.logo} enterFromTop`}>
         <Logo width={496} />
       </div>
-      <h1 className={styles.title}>{name ? `¡Gracias, ${name}!` : '¡Gracias por participar!'}</h1>
-      <div className={styles.scoreBox}>{points}</div>
-      <p className={styles.label}>Acumulaste</p>
-      <div className={styles.buttonBox}>
+      <h1 className={`${styles.title} enterFromLeft delay1`}>{name ? `¡Gracias, ${name}!` : '¡Gracias por participar!'}</h1>
+      <div className={`${styles.scoreBox} enterScale delay2`}>{points}</div>
+      <p className={`${styles.label} enterFromRight delay2`}>Acumulaste</p>
+      <div className={`${styles.buttonBox} enterFromBottom delay3`}>
         <Button className={styles.finishButton} onClick={onFinish}>
           Finalizar
         </Button>

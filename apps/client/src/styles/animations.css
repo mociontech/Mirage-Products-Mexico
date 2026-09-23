@@ -1,0 +1,72 @@
+/**
+ * Keyframes de entrada compartidos por las pantallas de la tablet - cada
+ * pantalla decide, via className, de donde entra cada elemento (logo desde
+ * arriba, titulo desde un lado, tarjetas con stagger) importando este
+ * archivo en su .module.css y usando las clases de mas abajo.
+ *
+ * Importante: animan `translate`/`scale` (propiedades independientes de
+ * `transform`), NUNCA `transform` en si. Varios elementos ya usan
+ * `transform: translateX(-50%)` para centrarse - si la animacion tambien
+ * escribiera `transform`, lo pisaria al terminar (fill-mode "both") y la
+ * posicion final quedaba corrida. `translate`/`scale` se combinan con ese
+ * `transform` existente en vez de reemplazarlo.
+ */
+@keyframes enterFromTop {
+  from { opacity: 0; translate: 0 -60px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes enterFromBottom {
+  from { opacity: 0; translate: 0 60px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes enterFromLeft {
+  from { opacity: 0; translate: -80px 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes enterFromRight {
+  from { opacity: 0; translate: 80px 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes enterFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes enterScale {
+  from { opacity: 0; scale: 0.85; }
+  to { opacity: 1; scale: 1; }
+}
+
+.enterFromTop {
+  animation: enterFromTop 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.enterFromBottom {
+  animation: enterFromBottom 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.enterFromLeft {
+  animation: enterFromLeft 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.enterFromRight {
+  animation: enterFromRight 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.enterFade {
+  animation: enterFade 500ms ease-out both;
+}
+
+.enterScale {
+  animation: enterScale 480ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.delay1 { animation-delay: 90ms; }
+.delay2 { animation-delay: 180ms; }
+.delay3 { animation-delay: 270ms; }
+.delay4 { animation-delay: 360ms; }
+.delay5 { animation-delay: 450ms; }

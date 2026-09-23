@@ -17,12 +17,12 @@ interface HomeProps {
 export function Home({ onStart, onOpenSettings }: HomeProps) {
   return (
     <BrandFrame>
-      <div className={styles.logo}>
+      <div className={`${styles.logo} enterFromTop`}>
         <Logo width={1371} />
       </div>
-      <p className={styles.title}>PRODUCTO INTERACTIVO</p>
-      <p className={styles.hint}>Toca y explora</p>
-      <div className={styles.buttonBox}>
+      <p className={`${styles.title} enterFromLeft delay1`}>PRODUCTO INTERACTIVO</p>
+      <p className={`${styles.hint} enterFromRight delay2`}>Toca y explora</p>
+      <div className={`${styles.buttonBox} enterFromBottom delay3`}>
         <Button className={styles.ctaButton} onClick={onStart}>
           Empezar
         </Button>
