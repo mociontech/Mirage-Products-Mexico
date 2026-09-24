@@ -23,9 +23,10 @@
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
   font-style: italic;
-  letter-spacing: 6px;
-  font-size: 140px;
+  letter-spacing: 13.51px;
+  font-size: 193px;
   line-height: 1;
   color: var(--color-text);
   text-align: center;
@@ -36,38 +37,66 @@
   position: absolute;
   left: 50%;
   top: 447px;
-  width: 900px;
-  min-height: 527px;
+  width: 1497px;
+  height: 526.875px;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4) var(--space-4);
+  gap: 130px;
   background: #ffffff;
   border-radius: 40px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
 }
 
+/* Barras rojas de acento en las esquinas de la tarjeta (node 423:203/204). */
+.cardAccentTop {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 461px;
+  height: 10px;
+  background: var(--color-primary);
+}
+
+.cardAccentBottom {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 461px;
+  height: 10px;
+  background: var(--color-primary);
+}
+
 .column {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: 498px;
 }
 
 .row {
   position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
   margin: 0;
   padding: var(--space-3) 0;
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
   font-style: italic;
   text-transform: uppercase;
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: 48px;
-  white-space: nowrap;
+  color: #5b5e5e;
+  font-size: 77px;
+}
+
+/* Solo el nombre se trunca con "..." si no cabe - el puntaje (.score) nunca
+   se corta, siempre queda completo y visible. */
+.name {
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .row:not(:last-child)::after {
@@ -76,12 +105,13 @@
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);
-  width: 220px;
+  width: 262px;
   height: 3px;
   background: var(--color-primary);
 }
 
 .score {
+  flex: none;
   color: var(--color-primary);
 }
 
