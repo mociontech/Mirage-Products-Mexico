@@ -13,6 +13,7 @@
 .title {
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
   font-size: 2rem;
 }
 

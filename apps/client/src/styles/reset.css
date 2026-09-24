@@ -42,6 +42,7 @@ h5,
 h6 {
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
 }
 
 button,

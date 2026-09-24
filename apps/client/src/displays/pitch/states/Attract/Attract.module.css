@@ -13,6 +13,7 @@
 .message {
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
   font-size: 3rem;
   color: var(--color-text);
   max-width: 80%;

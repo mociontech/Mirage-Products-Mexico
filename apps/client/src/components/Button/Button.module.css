@@ -8,6 +8,7 @@
   border-radius: var(--radius-md);
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
   font-size: 1.5rem;
   transition: opacity 150ms ease;
 }

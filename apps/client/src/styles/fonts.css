@@ -1,0 +1,40 @@
+/**
+ * Self-hosted brand font (latin subset, per el no-external-fonts constraint -
+ * nada se pide a Google Fonts en runtime). Acumin Pro reemplaza a
+ * Poppins/Lora (esas eran solo placeholders mientras no habia tipografia
+ * real del cliente) - un solo tipo de letra para heading y body, con el
+ * peso resuelto por font-weight en cada estilo, no por familias distintas.
+ */
+@font-face {
+  font-family: "Acumin Pro";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/AcuminPro-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Acumin Pro";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../assets/fonts/AcuminPro-Medium.ttf") format("truetype");
+}
+
+/* font-weight:700 carga el corte Black (no el Bold estatico, que se ve mas
+   liviano que el diseño) - es el unico peso grueso usado en toda la app. */
+@font-face {
+  font-family: "Acumin Pro";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../assets/fonts/AcuminPro-Black.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Acumin Pro";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("../assets/fonts/AcuminPro-Black.ttf") format("truetype");
+}

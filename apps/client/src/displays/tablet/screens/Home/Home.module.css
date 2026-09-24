@@ -19,6 +19,7 @@
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
   font-size: 65px;
   line-height: 1.023;
   text-transform: uppercase;

@@ -24,6 +24,7 @@
   justify-content: center;
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
   font-size: 165px;
   line-height: 1;
   color: var(--color-text);
@@ -43,6 +44,7 @@
   justify-content: center;
   font-family: var(--font-heading);
   font-weight: 700;
+  -webkit-text-stroke: 0.028em currentColor;
   font-size: 165px;
   line-height: 1;
   color: var(--color-text);
