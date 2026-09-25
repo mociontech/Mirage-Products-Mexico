@@ -4,7 +4,23 @@
  * Poppins/Lora (esas eran solo placeholders mientras no habia tipografia
  * real del cliente) - un solo tipo de letra para heading y body, con el
  * peso resuelto por font-weight en cada estilo, no por familias distintas.
+ *
+ * "Acumin Variable Concept" es la fuente real que usa Figma (variable, con
+ * eje de peso Y de ancho/condensado) - el archivo que el cliente entrego.
+ * Declarada con font-weight 100-900 y font-stretch 50%-200% para exponer
+ * toda la variable via los ejes estandar de CSS. "Acumin Pro" (los 4 cortes
+ * estaticos de abajo) queda como fallback para navegadores viejos sin
+ * soporte de variable fonts, o si esta familia no carga por algun motivo.
  */
+@font-face {
+  font-family: "Acumin Variable Concept";
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 50% 200%;
+  font-display: swap;
+  src: url("../assets/fonts/AcuminVariableConcept.ttf") format("truetype-variations");
+}
+
 @font-face {
   font-family: "Acumin Pro";
   font-style: normal;

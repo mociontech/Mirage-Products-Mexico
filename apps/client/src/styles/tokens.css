@@ -31,8 +31,8 @@
      ver fonts.css). Un solo tipo de letra para heading y body; el peso lo
      define font-weight en cada estilo, no una familia distinta. Poppins/Lora
      eran solo placeholders mientras no habia tipografia real del cliente. */
-  --font-heading: 'Acumin Pro', sans-serif; /* Bold 700 - titulares y frases */
-  --font-body: 'Acumin Pro', sans-serif; /* Normal 400 - cuerpo de texto */
+  --font-heading: 'Acumin Variable Concept', 'Acumin Pro', sans-serif; /* Bold 700 - titulares y frases */
+  --font-body: 'Acumin Variable Concept', 'Acumin Pro', sans-serif; /* Normal 400 - cuerpo de texto */
 
   /* Radios y espaciado base (ajustar contra Figma en Fase 3) */
   --radius-sm: 8px;
