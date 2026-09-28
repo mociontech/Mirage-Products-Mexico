@@ -9,11 +9,16 @@ interface SecretResetZoneProps {
 }
 
 /**
- * Zona invisible en la esquina superior izquierda: 5 toques seguidos ahi (en
+ * Zona invisible en la esquina superior derecha: 5 toques seguidos ahi (en
  * menos de WINDOW_MS) vuelven al inicio, sin ningun boton visible en el
  * diseño. Pedido de ultimo momento (un dia antes del evento) para que el
  * staff pueda sacar a alguien de una pantalla trabada sin esperar el
  * timeout de inactividad ni tocar el diseño aprobado.
+ *
+ * Antes estaba en la esquina superior IZQUIERDA - se movio aca porque
+ * tapaba (con z-index mas alto) la flecha de "volver" que agregamos despues
+ * en ScreenShell, en esa misma esquina: el toque nunca le llegaba al boton,
+ * solo a esta zona invisible que esta encima.
  */
 export function SecretResetZone({ onTrigger }: SecretResetZoneProps) {
   const tapsRef = useRef<number[]>([]);

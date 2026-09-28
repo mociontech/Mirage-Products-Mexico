@@ -12,6 +12,7 @@ import {
   type RegistrationFields,
 } from './gateway.js';
 import { log } from './logger.js';
+import { appendParticipationLog } from './localLog.js';
 import { Outbox } from './outbox.js';
 import { RoomRegistry } from './room.js';
 
@@ -189,6 +190,16 @@ wss.on('connection', (ws, request) => {
     // otros clientes.
     if (parsed.type === 'PARTICIPATION_RESULT') {
       const payload = { ...parsed, experience: 'catalogo' as const, roomId };
+      // Respaldo local en disco (logs/participaciones.csv), independiente de
+      // si Evius/Supabase estan configurados o responden - ver localLog.ts.
+      void appendParticipationLog({
+        ts: parsed.ts,
+        name: parsed.name,
+        email: parsed.email,
+        code: parsed.code,
+        productId: parsed.productId,
+        points: parsed.points,
+      });
       outbox.enqueue('eviusAttendee', parsed.idempotencyKey, payload);
       outbox.enqueue('eviusExperience', parsed.idempotencyKey, payload);
       outbox.enqueue('rankingDb', parsed.idempotencyKey, payload);
