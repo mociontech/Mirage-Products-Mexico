@@ -3,6 +3,18 @@ import { Button } from '../../../../components/Button/Button';
 import { Logo } from '../../../../components/Logo/Logo';
 import styles from './ThankYou.module.css';
 
+/**
+ * Solo nombre + primer apellido en el saludo, sin importar cuantas palabras
+ * haya escrito la persona - un nombre con dos nombres y dos apellidos hacia
+ * que el titulo ocupara varias lineas y se solapara con el puntaje de abajo
+ * (el layout esta pensado, a la Figma, para 1 nombre + 1 apellido). El
+ * nombre COMPLETO sigue yendo intacto a Evius/Supabase - esto es solo
+ * cosmetico, no toca la sesion.
+ */
+function shortGreetingName(name: string): string {
+  return name.trim().split(/\s+/).slice(0, 2).join(' ');
+}
+
 interface ThankYouProps {
   name: string | null;
   /** round(productos distintos vistos / total) * 100 - calculado en TabletApp.tsx. */
@@ -21,7 +33,9 @@ export function ThankYou({ name, points, onFinish }: ThankYouProps) {
       <div className={`${styles.logo} enterFromTop`}>
         <Logo width={496} />
       </div>
-      <h1 className={`${styles.title} enterFromLeft delay1`}>{name ? `¡Gracias, ${name}!` : '¡Gracias por participar!'}</h1>
+      <h1 className={`${styles.title} enterFromLeft delay1`}>
+        {name ? `¡Gracias, ${shortGreetingName(name)}!` : '¡Gracias por participar!'}
+      </h1>
       <div className={`${styles.scoreBox} enterScale delay2`}>{points}</div>
       <p className={`${styles.label} enterFromRight delay2`}>Acumulaste</p>
       <div className={`${styles.buttonBox} enterFromBottom delay3`}>

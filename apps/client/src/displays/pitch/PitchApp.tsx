@@ -7,17 +7,20 @@ import styles from './PitchApp.module.css';
 import { persistPitchState, readPersistedPitchState, type PitchScreenState } from './pitchStateStorage';
 import { Attract } from './states/Attract/Attract';
 import { Idle } from './states/Idle/Idle';
+import { Loop } from './states/Loop/Loop';
 import { ProductContent } from './states/ProductContent/ProductContent';
 
 const PITCH_DESIGN_WIDTH = 2147;
 const PITCH_DESIGN_HEIGHT = 4224;
 
 /**
- * Punto de entrada de la pantalla de pitch. IDLE es el estado inicial y el
- * fallback universal ante error, timeout o desconexion: lo maneja el
- * watchdog (90s sin evento/heartbeat) ademas de los eventos SESSION_END y
- * RESET_IDLE. Las tres capas quedan siempre montadas y solo cambian de
- * opacity, para que el video de IDLE nunca se recargue.
+ * Punto de entrada de la pantalla de pitch. LOOP (video ACAIRE) es el estado
+ * de reposo normal y el inicial - lo que se ve cuando no hay ninguna sesion
+ * activa (STATE_SYNC inactivo, SESSION_END, RESET_IDLE). IDLE (fondo estatico
+ * + particulas) quedo como fallback exclusivo del watchdog (90s sin
+ * evento/heartbeat) - una desconexion/error real, no el reposo de todos los
+ * dias. Las cuatro capas quedan siempre montadas y solo cambian de opacity,
+ * para que ningun video se recargue.
  */
 export function PitchApp() {
   const [state, setState] = useState<PitchScreenState>(() => readPersistedPitchState().state);
@@ -61,7 +64,7 @@ export function PitchApp() {
           setProductId(lastEvent.state.productId);
           setState(lastEvent.state.productId ? 'productContent' : 'attract');
         } else {
-          setState('idle');
+          setState('loop');
           setProductId(null);
         }
         break;
@@ -76,7 +79,7 @@ export function PitchApp() {
         break;
       case 'SESSION_END':
       case 'RESET_IDLE':
-        setState('idle');
+        setState('loop');
         setProductId(null);
         break;
       case 'HELLO':
@@ -93,10 +96,13 @@ export function PitchApp() {
 
   return (
     <div className="hide-cursor" style={{ width: '100%', height: '100%' }}>
-      <ScaleViewport designWidth={PITCH_DESIGN_WIDTH} designHeight={PITCH_DESIGN_HEIGHT}>
+      <ScaleViewport designWidth={PITCH_DESIGN_WIDTH} designHeight={PITCH_DESIGN_HEIGHT} stretch>
         <div className={styles.stack}>
           <div className={styles.layer} style={{ opacity: effectiveState === 'idle' ? 1 : 0 }}>
             <Idle />
+          </div>
+          <div className={styles.layer} style={{ opacity: effectiveState === 'loop' ? 1 : 0 }}>
+            <Loop />
           </div>
           <div className={styles.layer} style={{ opacity: effectiveState === 'attract' ? 1 : 0 }}>
             <Attract />

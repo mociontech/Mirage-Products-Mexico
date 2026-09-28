@@ -194,3 +194,98 @@ grant select on ranking_combined to anon, authenticated;
 -- particiona mal y aparecen "paises" duplicados con distinta capitalizacion.
 -- Recomendado: ISO 3166-1 alpha-2 ('CO', 'MX') por ser el formato mas dificil
 -- de escribir con typos.
+
+-- =========================================================================
+-- 6. Registro rapido por codigo ("ingreso rapido")
+--
+--    Hasta ahora el codigo (ver generateId/generateParticipantCode en cada
+--    proyecto) solo vivia en la sesion local del navegador/tablet - nunca
+--    se guardaba en ningun lado consultable. Eso significaba que la
+--    pantalla "ingresa tu ID" no podia recuperar nada: aceptaba cualquier
+--    codigo sin validarlo y seguia con nombre/correo vacios. Esta tabla es
+--    el registro real (codigo -> nombre/correo/etc), escrito apenas se
+--    genera el codigo, para que "ingresa tu ID" lo pueda buscar despues
+--    desde CUALQUIER dispositivo/pais.
+-- =========================================================================
+
+create table if not exists registrations (
+  id         uuid primary key default gen_random_uuid(),
+  code       text not null,
+  country    text not null,
+  experience text not null,
+  name       text,
+  email      text,
+  company    text,
+  phone      text,
+  area       text,
+  created_at timestamptz not null default now(),
+
+  constraint registrations_experience_check check (experience in ('catalogo', 'memory_match')),
+
+  -- Un mismo codigo no deberia repetirse dentro del mismo pais+experiencia -
+  -- generateId/generateParticipantCode ya minimizan la chance de colision,
+  -- esto es solo el respaldo a nivel de base de datos.
+  constraint registrations_unique_code unique (code, country, experience)
+);
+
+comment on table registrations is
+  'Registro (nombre/correo/etc) asociado a un codigo, escrito apenas se genera - permite que "ingresa tu ID" recupere los datos de la persona desde cualquier dispositivo. No confundir con `participations`, que es el resultado FINAL de una experiencia jugada.';
+
+create index if not exists registrations_code_idx
+  on registrations (code, country, experience);
+
+alter table registrations enable row level security;
+
+-- Escritura: tanto el sync-server de catalogo (service_role, bypassa RLS)
+-- como los clientes de celular/memory-match (anon, insertando directo desde
+-- el navegador) necesitan poder crear un registro - a diferencia de
+-- `participations`, aca NO se restringe por experience porque catalogo
+-- tambien se registra directo desde el celular (Mirage-Products-Mobile-*),
+-- no solo via el sync-server de la tablet.
+grant insert (code, country, experience, name, email, company, phone, area)
+  on registrations to anon;
+
+create policy "anon puede insertar registrations"
+  on registrations
+  for insert
+  to anon
+  with check (true);
+
+-- Lectura: NADIE (ni siquiera anon) puede hacer SELECT directo sobre la
+-- tabla base - mismo criterio que `participations`. La unica forma de leer
+-- un registro desde el navegador es esta funcion RPC, acotada a devolver
+-- solo la fila que coincide exactamente con code+country+experience (nunca
+-- una lista, nunca un scan libre de la tabla).
+create or replace function get_registration_by_code(p_code text, p_country text, p_experience text)
+returns table(name text, email text, company text, phone text, area text)
+language sql
+security definer
+set search_path = public
+as $$
+  select name, email, company, phone, area
+  from registrations
+  where code = p_code and country = p_country and experience = p_experience
+  limit 1;
+$$;
+
+grant execute on function get_registration_by_code(text, text, text) to anon, authenticated;
+
+-- =========================================================================
+-- 6b. Como insertar/leer un registro desde el sync-server (tablet+pitch)
+-- =========================================================================
+
+-- POST {RANKING_DB_URL}/rest/v1/registrations
+-- Headers:
+--   apikey: <service_role key>
+--   Authorization: Bearer <service_role key>
+--   Content-Type: application/json
+--   Prefer: resolution=merge-duplicates,return=minimal
+-- Body:
+--   { "code": "742913", "country": "CO", "experience": "catalogo",
+--     "name": "Ana", "email": "ana@mail.com", "company": null,
+--     "phone": null, "area": null }
+
+-- GET {RANKING_DB_URL}/rest/v1/registrations?code=eq.742913&country=eq.CO&experience=eq.catalogo&select=name,email,company,phone,area&limit=1
+-- Headers: apikey/Authorization: <service_role key> (el sync-server SI puede
+-- leer la tabla base directo, a diferencia del navegador - por eso el
+-- celular/memory-match usan la funcion RPC de arriba en vez de esto).

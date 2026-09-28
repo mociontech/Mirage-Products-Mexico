@@ -48,6 +48,10 @@
   background: linear-gradient(180deg, #f4f5f5 0%, #e8e8e8 100%);
 }
 
+.tileMuted {
+  background: #e8e8e8;
+}
+
 .tileRed {
   background: linear-gradient(180deg, #ff0531 0%, #df032a 100%);
 }
@@ -88,10 +92,25 @@
   }
 }
 
+.tilePhotoFrame {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .tilePhoto {
   position: absolute;
-  object-fit: contain;
+  display: block;
+  max-width: none;
   pointer-events: none;
+}
+
+.tilePhotoCover {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .tileLogo {

@@ -1,10 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { BrandFrame } from '../../../../components/BrandFrame/BrandFrame';
 import { Logo } from '../../../../components/Logo/Logo';
-import { fetchTopRanking, type RankingEntry } from '../../../../services/ranking';
+import { MarqueeText } from '../../../../components/MarqueeText/MarqueeText';
+import { fetchTopRanking, getCachedTopRanking, type RankingEntry } from '../../../../services/ranking';
 import styles from './Ranking.module.css';
 
 const AUTO_RETURN_MS = 5000;
+/**
+ * Cada cuanto reintenta mientras la pantalla siga montada. El envio del
+ * puntaje de ESTA sesion viaja al sync-server (PARTICIPATION_RESULT) y de
+ * ahi a Supabase via su propio outbox, de forma asincrona - casi nunca llega
+ * a tiempo para el primer fetch (que corre apenas monta la pantalla, unos
+ * milisegundos despues de tocar "Finalizar"). Sin este reintento, el
+ * puntaje propio simplemente nunca aparecia: un solo fetch que llega antes
+ * de que el insert exista se queda con la lista vieja para siempre. Mismo
+ * patron que Ranking.tsx en Products Mobile/Memory Match.
+ */
+const POLL_INTERVAL_MS = 1500;
 
 interface RankingProps {
   /** Se dispara solo, 5s despues de montar la pantalla - vuelve a Home y (via
@@ -25,26 +37,38 @@ interface RankingProps {
  */
 const COLUMN_SPLIT = 3;
 
-/** Trunca solo el nombre con "..." si no cabe - el puntaje nunca se corta. */
+/** El nombre corre hacia la izquierda y de vuelta si no cabe (MarqueeText) en vez de cortarse - el puntaje nunca se corta. */
 function RankingRow({ entry, delayMs }: { entry: RankingEntry; delayMs: number }) {
   return (
     <p className={`${styles.row} enterFromRight`} style={{ animationDelay: `${delayMs}ms` }}>
-      <span className={styles.name}>{entry.participant_name ?? 'Anonimo'}</span>{' '}
+      <span className={styles.name}>
+        <MarqueeText text={entry.participant_name ?? 'Anonimo'} />
+      </span>{' '}
       <span className={styles.score}>{Math.round(entry.score)}pt</span>
     </p>
   );
 }
 
 export function Ranking({ onFinish }: RankingProps) {
-  const [entries, setEntries] = useState<RankingEntry[]>([]);
+  // Arranca con lo que TabletApp.tsx ya haya prefeteado (prefetchTopRanking)
+  // al confirmar el producto - evita el parpadeo inicial mientras se repite
+  // el fetch por si el cache quedo desactualizado.
+  const [entries, setEntries] = useState<RankingEntry[]>(() => getCachedTopRanking() ?? []);
 
   useEffect(() => {
     let cancelled = false;
-    fetchTopRanking().then((rows) => {
-      if (!cancelled) setEntries(rows.slice(0, 5));
-    });
+
+    const poll = () => {
+      fetchTopRanking().then((rows) => {
+        if (!cancelled) setEntries(rows.slice(0, 5));
+      });
+    };
+
+    poll();
+    const interval = setInterval(poll, POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
+      clearInterval(interval);
     };
   }, []);
 

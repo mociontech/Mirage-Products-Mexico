@@ -12,7 +12,7 @@ interface ProductSelectProps {
 }
 
 /**
- * Layout final de seleccion de producto (Figma node 526:946,
+ * Layout final de seleccion de producto (Figma node 591:446,
  * "03_Pantalla seleccion_productos" - version vigente, canvas 1920x1200 -
  * ver comentario en Home.tsx sobre por que los px literales sirven de
  * coordenadas absolutas). Los 12 tiles (foto + logo real de marca, ver
@@ -60,24 +60,38 @@ export function ProductSelect({ selectedProductId, onPreview, onConfirm }: Produ
             }}
             type="button"
             aria-label={product.name}
-            className={`${styles.tile} ${card.variant === 'red' ? styles.tileRed : styles.tileLight} ${isSelected ? styles.selected : ''} enterScale`}
+            className={`${styles.tile} ${card.variant === 'red' ? styles.tileRed : styles.tileLight} ${card.tone === 'muted' ? styles.tileMuted : ''} ${isSelected ? styles.selected : ''} enterScale`}
             style={{ left: card.x, top: card.y, width: card.width, height: card.height, animationDelay: `${index * 45}ms` }}
             onClick={() => {
               onPreview(product.id);
               setPulseNonce((count) => count + 1);
             }}
           >
-            <img
-              src={product.tileImage}
-              alt=""
-              className={styles.tilePhoto}
+            <span
+              className={styles.tilePhotoFrame}
               style={{
                 left: tile.photo.x - card.x,
                 top: tile.photo.y - card.y,
                 width: tile.photo.width,
                 height: tile.photo.height,
               }}
-            />
+            >
+              <img
+                src={product.tileImage}
+                alt=""
+                className={`${styles.tilePhoto} ${tile.photo.crop ? '' : styles.tilePhotoCover}`}
+                style={
+                  tile.photo.crop
+                    ? {
+                        left: `${tile.photo.crop.left}%`,
+                        top: `${tile.photo.crop.top}%`,
+                        width: `${tile.photo.crop.width}%`,
+                        height: `${tile.photo.crop.height}%`,
+                      }
+                    : undefined
+                }
+              />
+            </span>
             <img
               src={product.tileLogo}
               alt={product.name}

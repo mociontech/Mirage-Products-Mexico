@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { ScaleViewport } from '../../components/ScaleViewport/ScaleViewport';
 import { products } from '../../content/products';
 import { useIdleReset } from '../../hooks/useIdleReset';
+import { prefetchTopRanking } from '../../services/ranking';
 import { useSync } from '../../sync/useSync';
+import { SecretResetZone } from '../../components/SecretResetZone/SecretResetZone';
 import { Home } from './screens/Home/Home';
 import { ProductSelect } from './screens/ProductSelect/ProductSelect';
 import { Ranking } from './screens/Ranking/Ranking';
@@ -39,11 +41,16 @@ export function TabletApp() {
     setViewedProductIds([]);
   };
 
-  useIdleReset(() => {
+  /** Misma logica que dispara el timeout de inactividad - se reusa para el
+   * gesto oculto de "volver al inicio" (SecretResetZone), pedido de ultimo
+   * momento para el evento. */
+  const forceHome = () => {
     if (screen === 'home' || screen === 'settings') return;
     send({ type: 'SESSION_END', ts: Date.now() });
     goHome();
-  });
+  };
+
+  useIdleReset(forceHome);
 
   const openSettings = () => {
     setScreenBeforeSettings(screen);
@@ -53,7 +60,11 @@ export function TabletApp() {
   const points = computeParticipationScore(viewedProductIds, products.length);
 
   return (
-    <ScaleViewport designWidth={TABLET_DESIGN_WIDTH} designHeight={TABLET_DESIGN_HEIGHT}>
+    <>
+      {/* Fuera de ScaleViewport a proposito: coordenadas de viewport real,
+          sin depender del factor de escala del diseño 1920x1200. */}
+      <SecretResetZone onTrigger={forceHome} />
+      <ScaleViewport designWidth={TABLET_DESIGN_WIDTH} designHeight={TABLET_DESIGN_HEIGHT}>
       {screen === 'home' && (
         <Home
           onStart={() => {
@@ -88,6 +99,9 @@ export function TabletApp() {
             // inmediato, no quedarse mostrando el ultimo producto hasta que
             // el ranking termine su temporizador.
             send({ type: 'RESET_IDLE', ts: Date.now() });
+            // Adelanta el fetch del Top 10 desde aca (antes de ThankYou) para
+            // que Ranking ya lo tenga listo al llegar ahi.
+            prefetchTopRanking();
             setScreen('thankYou');
           }}
         />
@@ -126,6 +140,7 @@ export function TabletApp() {
       )}
 
       {screen === 'settings' && <Settings onClose={() => setScreen(screenBeforeSettings)} />}
-    </ScaleViewport>
+      </ScaleViewport>
+    </>
   );
 }

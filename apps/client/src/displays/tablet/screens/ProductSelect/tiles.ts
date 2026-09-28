@@ -27,9 +27,22 @@ export interface Rect {
   height: number;
 }
 
+export interface PhotoRect extends Rect {
+  /**
+   * Transformacion de la imagen dentro del marco de recorte de Figma.
+   * Los porcentajes son relativos al ancho/alto de `PhotoRect`.
+   */
+  crop?: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  };
+}
+
 export interface ProductTile {
   productId: string;
-  photo: Rect;
+  photo: PhotoRect;
   logo: Rect;
   /** Etiqueta de capacidad opcional (solo los dos aires de ventana). */
   capacityLabel?: { text: string; x: number; y: number };
@@ -43,54 +56,114 @@ export const productTiles: ProductTile[] = [
   },
   {
     productId: 'x-life',
-    photo: { x: 521, y: 270, width: 365, height: 143 },
+    photo: {
+      x: 521,
+      y: 270,
+      width: 365,
+      height: 143,
+      crop: { left: -6.68, top: -6.48, width: 114.2, height: 106.56 },
+    },
     logo: { x: 607, y: 159, width: 205, height: 76 },
   },
   {
     productId: 'aire-ventana-1-ton',
-    photo: { x: 1045, y: 242, width: 234, height: 161 },
-    logo: { x: 1078, y: 167, width: 176, height: 70 },
-    capacityLabel: { text: '1 tonelada', x: 1143, y: 275 },
+    photo: {
+      x: 1045,
+      y: 242,
+      width: 234,
+      height: 161,
+      crop: { left: 0, top: -21.7, width: 100, height: 145.13 },
+    },
+    logo: { x: 1078, y: 167, width: 176, height: 52 },
+    capacityLabel: { text: '1 tonelada', x: 1166, y: 223 },
   },
   {
     productId: 'aire-ventana-2-ton',
-    photo: { x: 1567, y: 242, width: 206, height: 174 },
-    logo: { x: 1581, y: 167, width: 175, height: 71 },
-    capacityLabel: { text: '2 tonelada', x: 1608, y: 223 },
+    photo: {
+      x: 1567,
+      y: 242,
+      width: 206,
+      height: 174,
+      crop: { left: -1.54, top: -13.14, width: 103.09, height: 121.9 },
+    },
+    logo: { x: 1581, y: 167, width: 175, height: 52 },
+    capacityLabel: { text: '2 toneladas', x: 1669, y: 223 },
   },
   {
     productId: 'xs-inverter',
-    photo: { x: 46, y: 592, width: 361, height: 162 },
+    photo: {
+      x: 46,
+      y: 592,
+      width: 361,
+      height: 162,
+      crop: { left: -8.61, top: -28.57, width: 113.52, height: 142.42 },
+    },
     logo: { x: 167, y: 530, width: 116, height: 60 },
   },
   {
     productId: 'neo-inverter',
-    photo: { x: 526, y: 596, width: 368, height: 148 },
+    photo: {
+      x: 526,
+      y: 596,
+      width: 368,
+      height: 148,
+      crop: { left: -7.02, top: -1.69, width: 111.11, height: 112.07 },
+    },
     logo: { x: 633, y: 546, width: 143, height: 40 },
   },
   {
     productId: 'inverter-x',
-    photo: { x: 1005, y: 605, width: 369, height: 128 },
+    photo: {
+      x: 1005,
+      y: 605,
+      width: 369,
+      height: 128,
+      crop: { left: -6.8, top: -104.6, width: 113.6, height: 326.44 },
+    },
     logo: { x: 1097, y: 541, width: 187, height: 46 },
   },
   {
     productId: 'x5-convencional',
-    photo: { x: 1467, y: 592, width: 358, height: 162 },
+    photo: {
+      x: 1467,
+      y: 592,
+      width: 358,
+      height: 162,
+      crop: { left: -5.94, top: -28.03, width: 112.07, height: 142.01 },
+    },
     logo: { x: 1588, y: 532, width: 116, height: 60 },
   },
   {
     productId: 'flex-inverter',
-    photo: { x: 34, y: 910, width: 373, height: 159 },
+    photo: {
+      x: 34,
+      y: 910,
+      width: 373,
+      height: 159,
+      crop: { left: -12.62, top: -50.84, width: 128.53, height: 201.53 },
+    },
     logo: { x: 155, y: 848, width: 145, height: 59 },
   },
   {
     productId: 'inverter-x32',
-    photo: { x: 453, y: 910, width: 365, height: 169 },
+    photo: {
+      x: 453,
+      y: 910,
+      width: 365,
+      height: 169,
+      crop: { left: -28.19, top: -54.45, width: 152.32, height: 219.01 },
+    },
     logo: { x: 569, y: 850, width: 135, height: 55 },
   },
   {
     productId: 'magnum-22',
-    photo: { x: 878, y: 919, width: 356, height: 140 },
+    photo: {
+      x: 878,
+      y: 919,
+      width: 356,
+      height: 140,
+      crop: { left: -9.19, top: -58.58, width: 117.97, height: 208.55 },
+    },
     logo: { x: 917, y: 852, width: 279, height: 55 },
   },
   {
@@ -109,6 +182,7 @@ export const productTiles: ProductTile[] = [
  */
 export interface CardRect extends Rect {
   variant: 'light' | 'red';
+  tone?: 'muted';
 }
 
 export const productCards: Record<string, CardRect> = {
@@ -120,7 +194,7 @@ export const productCards: Record<string, CardRect> = {
   'neo-inverter': { x: 505, y: 520, width: 404, height: 241, variant: 'red' },
   'inverter-x': { x: 984, y: 520, width: 402, height: 241, variant: 'red' },
   'x5-convencional': { x: 1454, y: 520, width: 389, height: 241, variant: 'red' },
-  'flex-inverter': { x: 39, y: 838, width: 376, height: 278, variant: 'light' },
+  'flex-inverter': { x: 39, y: 838, width: 376, height: 278, variant: 'light', tone: 'muted' },
   'inverter-x32': { x: 446, y: 838, width: 382, height: 278, variant: 'light' },
   'magnum-22': { x: 865, y: 838, width: 380, height: 278, variant: 'light' },
   'magnum-18': { x: 1275, y: 838, width: 586, height: 278, variant: 'light' },

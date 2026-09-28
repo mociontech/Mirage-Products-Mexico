@@ -1,0 +1,32 @@
+.container {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: bottom;
+  max-width: 100%;
+}
+
+.text {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* Pausa al inicio y al final (para alcanzar a leer), corre a la izquierda
+   para revelar el resto y vuelve - en loop mientras la fila siga montada. */
+.text.animate {
+  animation: marquee-scroll 5s ease-in-out infinite;
+}
+
+@keyframes marquee-scroll {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  50%,
+  65% {
+    transform: translateX(var(--marquee-distance));
+  }
+  100% {
+    transform: translateX(0);
+  }
+}

@@ -27,3 +27,28 @@ export async function fetchTopRanking(): Promise<RankingEntry[]> {
     return [];
   }
 }
+
+/**
+ * Cache en memoria del ultimo Top 10 pedido - permite que Ranking.tsx pinte
+ * la lista de inmediato al montar (sin esperar el round-trip al sync-server)
+ * si alguien ya disparo prefetchTopRanking() antes, en vez de arrancar
+ * siempre en [] mientras carga. Ranking.tsx sigue haciendo su propio fetch
+ * al montar - esto solo evita el parpadeo inicial, no lo reemplaza.
+ */
+let cachedTopRanking: RankingEntry[] | null = null;
+
+/** Lee el cache sin disparar ningun fetch - null si nunca se prefeteo. */
+export function getCachedTopRanking(): RankingEntry[] | null {
+  return cachedTopRanking;
+}
+
+/**
+ * Dispara el fetch del ranking por adelantado (apenas se confirma el
+ * producto, antes de ThankYou) para que el round-trip al sync-server ya
+ * este en curso o resuelto cuando el visitante llegue a Ranking.
+ */
+export function prefetchTopRanking(): void {
+  fetchTopRanking().then((rows) => {
+    cachedTopRanking = rows;
+  });
+}

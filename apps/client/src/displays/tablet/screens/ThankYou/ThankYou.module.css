@@ -55,13 +55,16 @@
   transform: translate(-50%, -50%);
   margin: 0;
   font-family: var(--font-heading);
-  font-weight: 700;
-  -webkit-text-stroke: 0.028em currentColor;
+  font-weight: 800;
   font-style: italic;
   text-transform: uppercase;
   letter-spacing: 5px;
-  font-size: 75px;
-  color: var(--color-text);
+  font-stretch: 50%;
+  font-size: 82px;
+  line-height: 100px;
+  color: #000;
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #fff;
   text-align: center;
 }
 

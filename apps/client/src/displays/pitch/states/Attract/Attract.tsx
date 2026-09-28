@@ -1,17 +1,15 @@
-import { Logo } from '../../../../components/Logo/Logo';
-import styles from './Attract.module.css';
+import { VideoLayer, type VideoSource } from '../../../../components/VideoLayer/VideoLayer';
+import attractLogoLoop from '../../../../assets/video/attract-logo-loop.mp4';
 
 /**
- * Transicion breve entre IDLE y el contenido de producto, mientras el
+ * Transicion breve entre IDLE/Loop y el contenido de producto, mientras el
  * usuario recien empieza en la tablet y todavia no toca ningun producto.
- * No hay pantalla propia en Figma para este estado (ver Fase 0); esta es
- * una implementacion razonable, no una traduccion de un mock.
+ * Antes era un logo + texto estatico ("Bienvenido, explora el catalogo");
+ * ahora es el loop de video del logo que dio el cliente. No hay pantalla
+ * propia en Figma para este estado (ver Fase 0).
  */
+const SOURCES: VideoSource[] = [{ id: 'attract', src: attractLogoLoop }];
+
 export function Attract() {
-  return (
-    <div className={styles.screen}>
-      <Logo width={900} />
-      <p className={styles.message}>Bienvenido, explora el catalogo en la tablet</p>
-    </div>
-  );
+  return <VideoLayer sources={SOURCES} activeId="attract" />;
 }

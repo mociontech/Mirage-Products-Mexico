@@ -7,6 +7,17 @@ interface ScaleViewportProps {
   /** Alto del lienzo de diseno (viewport de referencia en Figma), en px. */
   designHeight: number;
   children: ReactNode;
+  /**
+   * true = estira el lienzo para llenar ancho Y alto reales por separado
+   * (escala X y Y independientes, deforma el contenido si la proporcion de
+   * la pantalla real no coincide con la del diseno) en vez del fit-to-screen
+   * normal (una sola escala, misma para X e Y, con barras si no coincide la
+   * proporcion). Pedido puntual para la pitch de Mexico: prefieren que la
+   * imagen ocupe todo el ancho real de la pantalla, aunque eso implique
+   * deformar el video/los productos, a que queden barras negras a los
+   * costados.
+   */
+  stretch?: boolean;
 }
 
 /**
@@ -16,11 +27,13 @@ interface ScaleViewportProps {
  * ninguno de los dos dispositivos, asi que todo el layout se construye contra
  * un lienzo fijo y esta capa hace el fit-to-screen en tiempo real.
  */
-export function ScaleViewport({ designWidth, designHeight, children }: ScaleViewportProps) {
+export function ScaleViewport({ designWidth, designHeight, children, stretch = false }: ScaleViewportProps) {
   const outerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(() =>
-    Math.min(window.innerWidth / designWidth, window.innerHeight / designHeight),
-  );
+  const [scale, setScale] = useState(() => {
+    const scaleX = window.innerWidth / designWidth;
+    const scaleY = window.innerHeight / designHeight;
+    return stretch ? { x: scaleX, y: scaleY } : { x: Math.min(scaleX, scaleY), y: Math.min(scaleX, scaleY) };
+  });
 
   useEffect(() => {
     const outer = outerRef.current;
@@ -28,15 +41,18 @@ export function ScaleViewport({ designWidth, designHeight, children }: ScaleView
 
     const updateScale = () => {
       const { clientWidth, clientHeight } = outer;
-      const nextScale = Math.min(clientWidth / designWidth, clientHeight / designHeight);
-      setScale(nextScale > 0 ? nextScale : 1);
+      const scaleX = clientWidth / designWidth;
+      const scaleY = clientHeight / designHeight;
+      const uniform = Math.min(scaleX, scaleY);
+      const next = stretch ? { x: scaleX, y: scaleY } : { x: uniform, y: uniform };
+      setScale({ x: next.x > 0 ? next.x : 1, y: next.y > 0 ? next.y : 1 });
     };
 
     updateScale();
     const observer = new ResizeObserver(updateScale);
     observer.observe(outer);
     return () => observer.disconnect();
-  }, [designWidth, designHeight]);
+  }, [designWidth, designHeight, stretch]);
 
   return (
     <div ref={outerRef} className={styles.outer}>
@@ -45,7 +61,7 @@ export function ScaleViewport({ designWidth, designHeight, children }: ScaleView
         style={{
           width: designWidth,
           height: designHeight,
-          transform: `scale(${scale})`,
+          transform: `scale(${scale.x}, ${scale.y})`,
         }}
       >
         {children}

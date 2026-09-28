@@ -277,6 +277,84 @@ export async function fetchRanking(experience: string): Promise<RankingResult> {
   }
 }
 
+export interface RegistrationFields {
+  name: string | null;
+  email: string | null;
+  company?: string | null;
+  phone?: string | null;
+  area?: string | null;
+}
+
+/**
+ * Escribe el registro (nombre/correo/etc) asociado a un codigo apenas se
+ * genera en Register.tsx, para que la vista "CODIGO ID" lo pueda recuperar
+ * despues desde cualquier dispositivo - antes el codigo no quedaba en
+ * ningun lado consultable, asi que esa pantalla no podia saber de quien
+ * era y avanzaba con name/email en null (ver docs/supabase-schema.sql
+ * seccion 6). A diferencia del insert de `participations`, este SI usa
+ * `Prefer: resolution=merge-duplicates`: si el mismo codigo se reenvia
+ * (reintento de red) se actualiza la fila en vez de fallar con 409.
+ */
+export async function submitRegistration(code: string, fields: RegistrationFields): Promise<boolean> {
+  if (!RANKING_DB_URL) {
+    log({ event: 'gateway_not_configured', destination: 'registration' });
+    return false;
+  }
+  if (!COUNTRY) return false;
+
+  return postToSupabase('registrations', {
+    code,
+    country: COUNTRY,
+    experience: 'catalogo',
+    name: fields.name?.trim() || null,
+    email: normalizeEmail(fields.email),
+    company: fields.company?.trim() || null,
+    phone: fields.phone?.trim() || null,
+    area: fields.area?.trim() || null,
+  });
+}
+
+export type RegistrationLookupResult =
+  | { status: 'not_configured' }
+  | { status: 'unavailable' }
+  | { status: 'ok'; record: RegistrationFields | null };
+
+/**
+ * Busca un codigo directo contra la tabla base `registrations` - la
+ * service_role key de este servidor puede hacer SELECT ahi (a diferencia de
+ * la Publishable key que usan las apps de celular/memory-match, que pasan
+ * por la funcion RPC get_registration_by_code en vez de esto).
+ *
+ * NO filtra por experience: el mismo codigo tiene que reconocerse sin
+ * importar en cual de las dos experiencias (catalogo/memory_match) se
+ * genero - alguien que jugo Products primero y guardo su codigo debe poder
+ * usarlo igual en Memory Match, y viceversa. Filtrar por experience aca
+ * rompia justo ese caso (ver constraint registrations_unique_code, que ya
+ * es solo (code, country)).
+ */
+export async function lookupRegistration(code: string): Promise<RegistrationLookupResult> {
+  if (!RANKING_DB_URL || !RANKING_DB_API_KEY) return { status: 'not_configured' };
+  if (!COUNTRY) return { status: 'not_configured' };
+
+  const query = new URLSearchParams({
+    code: `eq.${code}`,
+    country: `eq.${COUNTRY}`,
+    select: 'name,email,company,phone,area',
+    limit: '1',
+  });
+
+  try {
+    const response = await fetch(`${RANKING_DB_URL}/rest/v1/registrations?${query.toString()}`, {
+      headers: { apikey: RANKING_DB_API_KEY, Authorization: `Bearer ${RANKING_DB_API_KEY}` },
+    });
+    if (!response.ok) return { status: 'unavailable' };
+    const rows = (await response.json()) as RegistrationFields[];
+    return { status: 'ok', record: rows[0] ?? null };
+  } catch {
+    return { status: 'unavailable' };
+  }
+}
+
 export type ParticipantCheckResult = { status: 'not_configured' } | { status: 'unavailable' } | { status: 'ok'; exists: boolean };
 
 /**

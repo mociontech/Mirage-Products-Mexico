@@ -8,6 +8,7 @@ import { Modal } from '../../../../components/Modal';
 import modalStyles from '../../../../components/Modal/Modal.module.css';
 import { TextField } from '../../../../components/TextField/TextField';
 import { checkEmailUsedRemotely, hasEmailPlayedLocally, rememberUsedEmail } from '../../../../services/idService';
+import { lookupRegistrationByCode, submitRegistration } from '../../../../services/registration';
 import { EMPTY_SESSION, generateParticipantCode, type TabletSession } from '../../session';
 import styles from './Register.module.css';
 
@@ -52,7 +53,9 @@ export function Register({ onComplete }: RegisterProps) {
   const [generatedCode, setGeneratedCode] = useState('');
   const [enteredCode, setEnteredCode] = useState('');
   const [checking, setChecking] = useState(false);
+  const [checkingCode, setCheckingCode] = useState(false);
   const [showAdvertencia, setShowAdvertencia] = useState(false);
+  const [showCodigoNoEncontrado, setShowCodigoNoEncontrado] = useState(false);
 
   const skip = () => onComplete(EMPTY_SESSION);
 
@@ -74,8 +77,42 @@ export function Register({ onComplete }: RegisterProps) {
       return;
     }
 
-    setGeneratedCode(generateParticipantCode());
+    const code = generateParticipantCode();
+    setGeneratedCode(code);
+    // Guarda el registro asociado a este codigo para que "CODIGO ID" lo
+    // pueda recuperar despues - no se espera (nunca bloquea la navegacion).
+    void submitRegistration(code, { name: name.trim(), email: trimmedEmail, company, phone, area });
     setView('codeDisplay');
+  };
+
+  const handleCodeEntryComplete = async (code: string) => {
+    if (checkingCode) return;
+    setCheckingCode(true);
+    const lookup = await lookupRegistrationByCode(code);
+    if (lookup.status !== 'found') {
+      setCheckingCode(false);
+      setEnteredCode('');
+      setShowCodigoNoEncontrado(true);
+      return;
+    }
+
+    const email = lookup.record.email?.trim() ?? '';
+    if (email && hasEmailPlayedLocally(email)) {
+      setCheckingCode(false);
+      setEnteredCode('');
+      setShowAdvertencia(true);
+      return;
+    }
+    const usedRemotely = email ? await checkEmailUsedRemotely(email) : false;
+    setCheckingCode(false);
+    if (usedRemotely) {
+      rememberUsedEmail(email);
+      setEnteredCode('');
+      setShowAdvertencia(true);
+      return;
+    }
+
+    onComplete({ name: lookup.record.name ?? null, email: lookup.record.email ?? null, code });
   };
 
   if (view === 'codeEntry') {
@@ -89,7 +126,8 @@ export function Register({ onComplete }: RegisterProps) {
           <IdInput
             value={enteredCode}
             onChange={setEnteredCode}
-            onComplete={(code) => onComplete({ name: null, email: null, code })}
+            onComplete={(code) => void handleCodeEntryComplete(code)}
+            readOnly={checkingCode}
           />
         </div>
         <button type="button" className={`${styles.textLinkUnder} enterFade delay3`} onClick={() => setView('form')}>
@@ -99,6 +137,34 @@ export function Register({ onComplete }: RegisterProps) {
           <span>Continua</span>
           <span>sin registro</span>
         </button>
+
+        <Modal open={showCodigoNoEncontrado} onClose={() => setShowCodigoNoEncontrado(false)}>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 2L1 21h22L12 2z"
+              stroke="var(--color-primary)"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            <path d="M12 9v5" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="12" cy="17" r="1" fill="var(--color-primary)" />
+          </svg>
+          <p className={modalStyles.text}>No encontramos ese código. Verifica que esté bien escrito o regístrate de nuevo.</p>
+        </Modal>
+
+        <Modal open={showAdvertencia} onClose={() => setShowAdvertencia(false)}>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 2L1 21h22L12 2z"
+              stroke="var(--color-primary)"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            <path d="M12 9v5" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="12" cy="17" r="1" fill="var(--color-primary)" />
+          </svg>
+          <p className={modalStyles.text}>Parece que ya participaste en esta experiencia. ¡Gracias!</p>
+        </Modal>
       </BrandFrame>
     );
   }

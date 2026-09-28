@@ -1,4 +1,10 @@
-export type PitchScreenState = 'idle' | 'attract' | 'productContent';
+/**
+ * 'loop' es la pantalla de reposo normal (video ACAIRE en loop) cuando no
+ * hay sesion activa. 'idle' quedo reservado solo para el fallback de
+ * error/timeout/desconexion del watchdog - ya no es el estado de reposo
+ * por defecto (ver PitchApp.tsx).
+ */
+export type PitchScreenState = 'idle' | 'loop' | 'attract' | 'productContent';
 
 interface PersistedPitchState {
   state: PitchScreenState;
@@ -6,7 +12,7 @@ interface PersistedPitchState {
 }
 
 const STORAGE_KEY = 'mirage:pitch:state';
-const DEFAULT_STATE: PersistedPitchState = { state: 'idle', productId: null };
+const DEFAULT_STATE: PersistedPitchState = { state: 'loop', productId: null };
 
 /**
  * El pitch persiste su ultimo estado en sessionStorage para sobrevivir a un

@@ -7,6 +7,9 @@ import {
   deliverExperienceToEvius,
   deliverToRankingDb,
   fetchRanking,
+  lookupRegistration,
+  submitRegistration,
+  type RegistrationFields,
 } from './gateway.js';
 import { log } from './logger.js';
 import { Outbox } from './outbox.js';
@@ -40,11 +43,30 @@ const outbox = new Outbox({
  */
 function withCors(response: ServerResponse): void {
   response.setHeader('Access-Control-Allow-Origin', '*');
-  response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-function handleHttpRequest(request: IncomingMessage, response: ServerResponse): void {
+/** Junta el body de un POST y lo parsea como JSON - null si esta vacio o mal formado. */
+async function readJsonBody(request: IncomingMessage): Promise<unknown> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of request) {
+    chunks.push(chunk as Buffer);
+  }
+  const raw = Buffer.concat(chunks).toString('utf-8');
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function isRegistrationFields(value: unknown): value is RegistrationFields {
+  return typeof value === 'object' && value !== null && 'name' in value && 'email' in value;
+}
+
+async function handleHttpRequest(request: IncomingMessage, response: ServerResponse): Promise<void> {
   const url = new URL(request.url ?? '/', 'http://localhost');
   withCors(response);
 
@@ -85,6 +107,39 @@ function handleHttpRequest(request: IncomingMessage, response: ServerResponse): 
       response.writeHead(503, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ error: `ranking_db_${result.status}` }));
     });
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/register') {
+    const body = await readJsonBody(request);
+    const codeRaw = url.searchParams.get('code');
+    const code = codeRaw ?? (typeof body === 'object' && body !== null && 'code' in body ? String((body as { code: unknown }).code) : null);
+    if (!code || !isRegistrationFields(body)) {
+      response.writeHead(400, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: 'missing_code_or_fields' }));
+      return;
+    }
+    const ok = await submitRegistration(code, body);
+    response.writeHead(ok ? 200 : 503, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({ ok }));
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/register') {
+    const code = url.searchParams.get('code');
+    if (!code) {
+      response.writeHead(400, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: 'missing_code' }));
+      return;
+    }
+    const result = await lookupRegistration(code);
+    if (result.status === 'ok') {
+      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ record: result.record }));
+      return;
+    }
+    response.writeHead(503, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({ error: `registration_db_${result.status}` }));
     return;
   }
 
