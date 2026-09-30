@@ -67,9 +67,9 @@ select
   experience,
   score,
   submitted_at,
-  (submitted_at at time zone 'utc' at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date as event_day,
+  (submitted_at at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date as event_day,
   rank() over (
-    partition by country, experience, (submitted_at at time zone 'utc' at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date
+    partition by country, experience, (submitted_at at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date
     order by score desc, submitted_at asc
   ) as position
 from participations
@@ -97,7 +97,7 @@ create or replace view ranking_combined as
 with tagged as (
   select
     *,
-    (submitted_at at time zone 'utc' at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date as event_day
+    (submitted_at at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date as event_day
   from participations
   where is_anonymous = false
 )
