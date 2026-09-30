@@ -57,6 +57,19 @@ function normalizeCode(code: string): string {
   return code.replace(/\D/g, '');
 }
 
+/**
+ * Fecha local (YYYY-MM-DD) de "ahora" en la zona horaria del pais de este
+ * despliegue - tiene que dar el mismo valor que el event_day calculado en
+ * las vistas ranking_by_experience/ranking_combined (ver docs/supabase-schema.sql
+ * seccion 2/3), o el filtro `event_day=eq.` de fetchRanking/fetchMyCombinedPosition
+ * nunca calzaria con la fila de hoy. El ranking (y el premio) se maneja por
+ * dia: cada dia del evento de una semana arranca en position 1 de nuevo.
+ */
+function getEventDay(): string {
+  const timeZone = COUNTRY === 'CO' ? 'America/Bogota' : 'America/Mexico_City';
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+
 async function postJson(url: string, body: unknown, apiKey?: string): Promise<boolean> {
   const response = await fetch(url, {
     method: 'POST',
@@ -274,6 +287,7 @@ export async function fetchRanking(experience: string): Promise<RankingResult> {
   const view = experience === 'combined' ? 'ranking_combined' : 'ranking_by_experience';
   const query = new URLSearchParams({
     country: `eq.${COUNTRY}`,
+    event_day: `eq.${getEventDay()}`,
     order: 'position.asc',
     limit: '10',
   });
@@ -398,6 +412,7 @@ export async function fetchMyCombinedPosition(email: string): Promise<CombinedPo
   const query = new URLSearchParams({
     participant_id: `eq.${normalized}`,
     country: `eq.${COUNTRY}`,
+    event_day: `eq.${getEventDay()}`,
     select: 'position,final_score,catalogo_score,memory_match_score',
     limit: '1',
   });

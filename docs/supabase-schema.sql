@@ -43,6 +43,18 @@ create index if not exists participations_participant_idx
 -- =========================================================================
 -- 2. Ranking por experiencia individual (top N tal cual lo pide
 --    GET /ranking?experience=catalogo en el sync-server)
+--
+--    event_day: el evento dura una semana y el ranking (y el premio) se
+--    maneja POR DIA - quien va hoy compite solo contra quien jugo hoy y
+--    puede reclamar su premio el mismo dia, sin tener que esperar a que
+--    termine la semana. event_day convierte submitted_at (timestamptz, UTC)
+--    a la fecha local del pais del evento - Colombia y Mexico estan en
+--    zonas horarias distintas (America/Bogota vs America/Mexico_City), asi
+--    que el "dia" de una participacion se calcula con el huso horario que
+--    corresponda a su propio country, nunca UTC directo (eso correria el
+--    corte de dia varias horas, cortando participaciones nocturnas al dia
+--    equivocado). position se recalcula partition by (..., event_day): cada
+--    dia arranca en position 1 de nuevo.
 -- =========================================================================
 
 create or replace view ranking_by_experience as
@@ -53,27 +65,43 @@ select
   experience,
   score,
   submitted_at,
+  (submitted_at at time zone 'utc' at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date as event_day,
   rank() over (
-    partition by country, experience
+    partition by country, experience, (submitted_at at time zone 'utc' at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date
     order by score desc, submitted_at asc
   ) as position
 from participations;
 
 comment on view ranking_by_experience is
-  'Ranking dentro de una sola experiencia. El sync-server la consulta via PostgREST con ?country=eq.CO&experience=eq.catalogo&order=position.asc&limit=10.';
+  'Ranking dentro de una sola experiencia, POR DIA (event_day, huso horario del pais). El sync-server la consulta via PostgREST con ?country=eq.CO&experience=eq.catalogo&event_day=eq.YYYY-MM-DD&order=position.asc&limit=10.';
 
 -- =========================================================================
 -- 3. Ranking combinado (el que decide el premio): promedia catalogo +
 --    memory_match por persona, tratando la experiencia no jugada como 0.
 --    "Deberia participar en las dos pero si solo lo hace en una, sacaria
 --    50 puntos en el mejor de los casos" - ver conversacion del brief.
+--
+--    Tambien POR DIA (ver comentario de event_day arriba): se agrupa por
+--    (participant_id, country, event_day), no solo por persona+pais - si
+--    alguien juega catalogo un dia y memory_match otro dia distinto, cuentan
+--    como dos participaciones de dias distintos (cada una compite y puede
+--    ganar el premio de SU dia), no se promedian entre si. El caso normal -
+--    ambas experiencias el mismo dia de visita - sigue promediandose igual
+--    que antes.
 -- =========================================================================
 
 create or replace view ranking_combined as
+with tagged as (
+  select
+    *,
+    (submitted_at at time zone 'utc' at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date as event_day
+  from participations
+)
 select
   participant_id,
   max(participant_name) as participant_name,
   country,
+  event_day,
   coalesce(max(score) filter (where experience = 'catalogo'), 0)      as catalogo_score,
   coalesce(max(score) filter (where experience = 'memory_match'), 0)  as memory_match_score,
   (
@@ -82,7 +110,7 @@ select
   ) / 2.0 as final_score,
   max(submitted_at) as last_submitted_at,
   rank() over (
-    partition by country
+    partition by country, event_day
     order by
       (
         coalesce(max(score) filter (where experience = 'catalogo'), 0)
@@ -90,11 +118,11 @@ select
       ) / 2.0 desc,
       max(submitted_at) asc
   ) as position
-from participations
-group by participant_id, country;
+from tagged
+group by participant_id, country, event_day;
 
 comment on view ranking_combined is
-  'Ranking final por persona (promedio de las dos experiencias, 0 si no jugo una). Es el que decide el premio - se consulta por pais via ?country=eq.CO&order=position.asc&limit=10.';
+  'Ranking final por persona (promedio de las dos experiencias, 0 si no jugo una), POR DIA (event_day, huso horario del pais). Es el que decide el premio del dia - se consulta por pais y dia via ?country=eq.CO&event_day=eq.YYYY-MM-DD&order=position.asc&limit=10.';
 
 -- =========================================================================
 -- 4. Row Level Security
