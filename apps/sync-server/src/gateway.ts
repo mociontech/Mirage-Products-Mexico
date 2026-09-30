@@ -44,6 +44,19 @@ function normalizeEmail(email: string | null): string | null {
   return trimmed ? trimmed : null;
 }
 
+/**
+ * Deja el codigo solo en digitos (sin guion). Bug real detectado en el
+ * evento de Mexico: el tablet genera codigos de 6 digitos sin guion
+ * (generateParticipantCode en session.ts), pero Memory Match/Mobile
+ * generan "NNN-NNN" y su pantalla de "Digita ID" siempre reconstruye la
+ * busqueda CON guion - un codigo generado en el tablet nunca calzaba
+ * contra si mismo en esa busqueda. Normalizar en cada punto de
+ * escritura/lectura hace que el formato (con o sin guion) deje de importar.
+ */
+function normalizeCode(code: string): string {
+  return code.replace(/\D/g, '');
+}
+
 async function postJson(url: string, body: unknown, apiKey?: string): Promise<boolean> {
   const response = await fetch(url, {
     method: 'POST',
@@ -303,7 +316,7 @@ export async function submitRegistration(code: string, fields: RegistrationField
   if (!COUNTRY) return false;
 
   return postToSupabase('registrations', {
-    code,
+    code: normalizeCode(code),
     country: COUNTRY,
     experience: 'catalogo',
     name: fields.name?.trim() || null,
@@ -337,7 +350,7 @@ export async function lookupRegistration(code: string): Promise<RegistrationLook
   if (!COUNTRY) return { status: 'not_configured' };
 
   const query = new URLSearchParams({
-    code: `eq.${code}`,
+    code: `eq.${normalizeCode(code)}`,
     country: `eq.${COUNTRY}`,
     select: 'name,email,company,phone,area',
     limit: '1',
@@ -350,6 +363,67 @@ export async function lookupRegistration(code: string): Promise<RegistrationLook
     if (!response.ok) return { status: 'unavailable' };
     const rows = (await response.json()) as RegistrationFields[];
     return { status: 'ok', record: rows[0] ?? null };
+  } catch {
+    return { status: 'unavailable' };
+  }
+}
+
+export interface CombinedPositionRecord {
+  position: number;
+  finalScore: number;
+  catalogoScore: number;
+  memoryMatchScore: number;
+}
+
+export type CombinedPositionResult =
+  | { status: 'not_configured' }
+  | { status: 'unavailable' }
+  | { status: 'ok'; record: CombinedPositionRecord | null };
+
+/**
+ * Puesto de una persona puntual en `ranking_combined` (el que decide el
+ * premio) - a diferencia de fetchRanking('combined'), que trae el top 10,
+ * esta filtra por participant_id (email) para poder mostrarle a esa persona
+ * su propio puesto general aunque no este en el top 10. Se usa en ThankYou
+ * para separar "tu puntaje en esta experiencia" (que ya se ve arriba) de "tu
+ * puesto en el ranking general".
+ */
+export async function fetchMyCombinedPosition(email: string): Promise<CombinedPositionResult> {
+  if (!RANKING_DB_URL || !RANKING_DB_API_KEY) return { status: 'not_configured' };
+  if (!COUNTRY) return { status: 'not_configured' };
+
+  const normalized = normalizeEmail(email);
+  if (!normalized) return { status: 'ok', record: null };
+
+  const query = new URLSearchParams({
+    participant_id: `eq.${normalized}`,
+    country: `eq.${COUNTRY}`,
+    select: 'position,final_score,catalogo_score,memory_match_score',
+    limit: '1',
+  });
+
+  try {
+    const response = await fetch(`${RANKING_DB_URL}/rest/v1/ranking_combined?${query.toString()}`, {
+      headers: { apikey: RANKING_DB_API_KEY, Authorization: `Bearer ${RANKING_DB_API_KEY}` },
+    });
+    if (!response.ok) return { status: 'unavailable' };
+    const rows = (await response.json()) as Array<{
+      position: number;
+      final_score: number;
+      catalogo_score: number;
+      memory_match_score: number;
+    }>;
+    const row = rows[0];
+    if (!row) return { status: 'ok', record: null };
+    return {
+      status: 'ok',
+      record: {
+        position: row.position,
+        finalScore: row.final_score,
+        catalogoScore: row.catalogo_score,
+        memoryMatchScore: row.memory_match_score,
+      },
+    };
   } catch {
     return { status: 'unavailable' };
   }

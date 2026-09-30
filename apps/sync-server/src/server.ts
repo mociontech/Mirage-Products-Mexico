@@ -6,6 +6,7 @@ import {
   deliverAttendeeToEvius,
   deliverExperienceToEvius,
   deliverToRankingDb,
+  fetchMyCombinedPosition,
   fetchRanking,
   lookupRegistration,
   submitRegistration,
@@ -123,6 +124,24 @@ async function handleHttpRequest(request: IncomingMessage, response: ServerRespo
     const ok = await submitRegistration(code, body);
     response.writeHead(ok ? 200 : 503, { 'Content-Type': 'application/json' });
     response.end(JSON.stringify({ ok }));
+    return;
+  }
+
+  if (request.method === 'GET' && url.pathname === '/my-position') {
+    const email = url.searchParams.get('email');
+    if (!email) {
+      response.writeHead(400, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: 'missing_email' }));
+      return;
+    }
+    const result = await fetchMyCombinedPosition(email);
+    if (result.status === 'ok') {
+      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ record: result.record }));
+      return;
+    }
+    response.writeHead(503, { 'Content-Type': 'application/json' });
+    response.end(JSON.stringify({ error: `ranking_db_${result.status}` }));
     return;
   }
 

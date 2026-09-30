@@ -13,18 +13,56 @@ export interface RankingEntry {
  * host/puerto que la conexion de sync (connection.config.ts): si la tablet
  * no esta configurada (Settings) o el server no responde, no hay ranking
  * que mostrar y la pantalla debe manejarlo como lista vacia, no como error.
+ *
+ * `experience=combined` lee `ranking_combined` (promedio catalogo+memory
+ * match, ver docs/supabase-schema.sql) - es el ranking que decide el premio,
+ * no el de esta experiencia sola. Antes se pedia `experience=catalogo`
+ * (ranking_by_experience) y la pantalla de Ranking terminaba mostrando un
+ * top 5 que no era el que en verdad definia el premio. La vista combinada
+ * expone `final_score` en vez de `score`, se remapea aca para no tocar el
+ * resto de la pantalla.
  */
 export async function fetchTopRanking(): Promise<RankingEntry[]> {
   const config = getSyncConfig();
   if (!config) return [];
 
   try {
-    const response = await fetch(`http://${config.host}:${config.port}/ranking?experience=catalogo`);
+    const response = await fetch(`http://${config.host}:${config.port}/ranking?experience=combined`);
     if (!response.ok) return [];
-    const rows = (await response.json()) as RankingEntry[];
-    return Array.isArray(rows) ? rows : [];
+    const rows = (await response.json()) as Array<{ participant_name: string | null; final_score: number; position: number }>;
+    if (!Array.isArray(rows)) return [];
+    return rows.map((row) => ({ participant_name: row.participant_name, score: row.final_score, position: row.position }));
   } catch {
     return [];
+  }
+}
+
+/**
+ * Posicion y puntajes de una persona puntual en el ranking general
+ * (combinado), consultada por email via el sync-server (GET
+ * /my-position?email=..., ver gateway.ts#fetchMyCombinedPosition). Se usa en
+ * ThankYou para dejar claro que el puntaje que se acaba de ver es solo de
+ * esta experiencia, y mostrar por separado en que puesto va la persona en el
+ * ranking general (el que decide el premio).
+ */
+export interface CombinedPositionEntry {
+  position: number;
+  finalScore: number;
+  catalogoScore: number;
+  memoryMatchScore: number;
+}
+
+export async function fetchMyCombinedPosition(email: string): Promise<CombinedPositionEntry | null> {
+  const config = getSyncConfig();
+  if (!config || !email) return null;
+
+  try {
+    const response = await fetch(`http://${config.host}:${config.port}/my-position?email=${encodeURIComponent(email)}`);
+    if (!response.ok) return null;
+    const body = (await response.json()) as { record: CombinedPositionEntry | null };
+    return body.record;
+  } catch {
+    return null;
   }
 }
 

@@ -8,29 +8,41 @@ export interface RegistrationFields {
   area?: string | null;
 }
 
+const REGISTER_RETRY_DELAYS_MS = [0, 800, 2000];
+
 /**
  * Guarda el registro (nombre/correo/etc) asociado a un codigo apenas se
  * genera en Register.tsx, via el sync-server local (POST /register, ver
  * gateway.ts#submitRegistration) - nunca directo contra Supabase desde la
  * tablet, mismo motivo que fetchTopRanking en services/ranking.ts (el
- * sync-server es quien tiene la service_role key). Best-effort y
- * silencioso: nunca bloquea el registro ni lanza. Si falla (tablet sin
- * configurar o sync-server no responde), el peor caso es que ese codigo
- * puntual no se pueda recuperar despues.
+ * sync-server es quien tiene la service_role key).
+ *
+ * Antes esto era fire-and-forget silencioso: no revisaba `response.ok`, asi
+ * que un 503 del sync-server (Supabase caida, RLS, etc.) se veia identico a
+ * un exito - el codigo se mostraba en pantalla como si ya estuviera guardado
+ * cuando en realidad nunca llego a la base (bug real detectado en vivo en
+ * Mexico). Ahora reintenta unas pocas veces con backoff corto (util contra
+ * caidas cortas del wifi del venue) y devuelve si de verdad quedo guardado,
+ * para que Register.tsx pueda avisarle al staff si no.
  */
-export async function submitRegistration(code: string, fields: RegistrationFields): Promise<void> {
+export async function submitRegistration(code: string, fields: RegistrationFields): Promise<boolean> {
   const config = getSyncConfig();
-  if (!config) return;
+  if (!config) return false;
 
-  try {
-    await fetch(`http://${config.host}:${config.port}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, ...fields }),
-    });
-  } catch {
-    // Sin conexion al sync-server: el codigo no queda recuperable por ahora.
+  for (const delay of REGISTER_RETRY_DELAYS_MS) {
+    if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+    try {
+      const response = await fetch(`http://${config.host}:${config.port}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, ...fields }),
+      });
+      if (response.ok) return true;
+    } catch {
+      // Sin conexion al sync-server en este intento - se reintenta abajo.
+    }
   }
+  return false;
 }
 
 export type RegistrationLookup =

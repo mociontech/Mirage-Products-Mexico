@@ -9,6 +9,12 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* fill (no cover): la pitch de Mexico ya se ajusta al ancho Y al alto
+     reales por separado (ver ScaleViewport `stretch`) - con `cover` el
+     video se recortaba en el eje que no coincidia con la proporcion del
+     lienzo de diseño. `fill` estira el video para llenar exacto sin
+     recortar nada, al costo de deformarlo un poco - mismo criterio ya
+     aceptado para el fondo de esta misma pantalla. */
+  object-fit: fill;
   transition: opacity 600ms ease;
 }

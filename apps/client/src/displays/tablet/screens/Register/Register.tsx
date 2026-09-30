@@ -56,6 +56,8 @@ export function Register({ onComplete }: RegisterProps) {
   const [checkingCode, setCheckingCode] = useState(false);
   const [showAdvertencia, setShowAdvertencia] = useState(false);
   const [showCodigoNoEncontrado, setShowCodigoNoEncontrado] = useState(false);
+  const [showErrorConexion, setShowErrorConexion] = useState(false);
+  const [registroSinConfirmar, setRegistroSinConfirmar] = useState(false);
 
   const skip = () => onComplete(EMPTY_SESSION);
 
@@ -79,9 +81,14 @@ export function Register({ onComplete }: RegisterProps) {
 
     const code = generateParticipantCode();
     setGeneratedCode(code);
-    // Guarda el registro asociado a este codigo para que "CODIGO ID" lo
-    // pueda recuperar despues - no se espera (nunca bloquea la navegacion).
-    void submitRegistration(code, { name: name.trim(), email: trimmedEmail, company, phone, area });
+    setRegistroSinConfirmar(false);
+    // No se espera (nunca bloquea la navegacion) - pero a diferencia de
+    // antes, si reintenta varias veces y aun asi falla, se lo avisamos al
+    // staff en la pantalla de codigo (ver registroSinConfirmar abajo) en vez
+    // de mostrar el codigo como si ya estuviera guardado.
+    void submitRegistration(code, { name: name.trim(), email: trimmedEmail, company, phone, area }).then((ok) => {
+      if (!ok) setRegistroSinConfirmar(true);
+    });
     setView('codeDisplay');
   };
 
@@ -89,6 +96,12 @@ export function Register({ onComplete }: RegisterProps) {
     if (checkingCode) return;
     setCheckingCode(true);
     const lookup = await lookupRegistrationByCode(code);
+    if (lookup.status === 'error') {
+      setCheckingCode(false);
+      setEnteredCode('');
+      setShowErrorConexion(true);
+      return;
+    }
     if (lookup.status !== 'found') {
       setCheckingCode(false);
       setEnteredCode('');
@@ -152,6 +165,20 @@ export function Register({ onComplete }: RegisterProps) {
           <p className={modalStyles.text}>No encontramos ese código. Verifica que esté bien escrito o regístrate de nuevo.</p>
         </Modal>
 
+        <Modal open={showErrorConexion} onClose={() => setShowErrorConexion(false)}>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M12 2L1 21h22L12 2z"
+              stroke="var(--color-primary)"
+              strokeWidth="1.5"
+              strokeLinejoin="round"
+            />
+            <path d="M12 9v5" stroke="var(--color-primary)" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="12" cy="17" r="1" fill="var(--color-primary)" />
+          </svg>
+          <p className={modalStyles.text}>Sin conexión por ahora. Tu código puede seguir siendo válido — inténtalo de nuevo en unos segundos.</p>
+        </Modal>
+
         <Modal open={showAdvertencia} onClose={() => setShowAdvertencia(false)}>
           <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
@@ -179,6 +206,11 @@ export function Register({ onComplete }: RegisterProps) {
         <div className={`${styles.idInputBox} enterScale delay2`}>
           <IdInput value={generatedCode} onChange={() => {}} readOnly />
         </div>
+        {registroSinConfirmar && (
+          <p className={modalStyles.text} style={{ textAlign: 'center' }}>
+            No pudimos confirmar tu código en el servidor. Anótalo a mano por si acaso.
+          </p>
+        )}
         <div className={`${styles.finishButtonBox} enterFromBottom delay3`}>
           <Button className={styles.finishButton} onClick={() => onComplete({ name: name || null, email: email || null, code: generatedCode })}>
             Finalizar

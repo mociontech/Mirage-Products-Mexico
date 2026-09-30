@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { BrandFrame } from '../../../../components/BrandFrame/BrandFrame';
 import { Button } from '../../../../components/Button/Button';
 import { Logo } from '../../../../components/Logo/Logo';
+import { fetchMyCombinedPosition } from '../../../../services/ranking';
 import styles from './ThankYou.module.css';
 
 /**
@@ -17,6 +19,7 @@ function shortGreetingName(name: string): string {
 
 interface ThankYouProps {
   name: string | null;
+  email: string | null;
   /** round(productos distintos vistos / total) * 100 - calculado en TabletApp.tsx. */
   points: number;
   onFinish: () => void;
@@ -26,8 +29,28 @@ interface ThankYouProps {
  * Positioned to match Figma exactly (node 224:3181, "04_Agradecimiento",
  * design canvas 1920x1200 - see the comment in Home.tsx for why literal px
  * work here with no unit conversion).
+ *
+ * El puntaje de arriba es SOLO de esta experiencia (Catalogo) - se aclara
+ * con el label de abajo porque el dia del evento en Mexico el cliente vio un
+ * 100 aca y penso que ya habia ganado el premio, cuando el premio lo decide
+ * el ranking general (promedio con Memory Match, ver ranking_combined en
+ * docs/supabase-schema.sql). Debajo se muestra por separado, si hay email,
+ * el puesto real de esa persona en ese ranking general.
  */
-export function ThankYou({ name, points, onFinish }: ThankYouProps) {
+export function ThankYou({ name, email, points, onFinish }: ThankYouProps) {
+  const [combinedPosition, setCombinedPosition] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!email) return;
+    let cancelled = false;
+    fetchMyCombinedPosition(email).then((record) => {
+      if (!cancelled && record) setCombinedPosition(record.position);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [email]);
+
   return (
     <BrandFrame>
       <div className={`${styles.logo} enterFromTop`}>
@@ -37,7 +60,10 @@ export function ThankYou({ name, points, onFinish }: ThankYouProps) {
         {name ? `¡Gracias, ${shortGreetingName(name)}!` : '¡Gracias por participar!'}
       </h1>
       <div className={`${styles.scoreBox} enterScale delay2`}>{points}</div>
-      <p className={`${styles.label} enterFromRight delay2`}>Acumulaste</p>
+      <p className={`${styles.label} enterFromRight delay2`}>Acumulaste en esta experiencia</p>
+      {combinedPosition !== null && (
+        <p className={`${styles.label} enterFromRight delay2`}>Vas en el puesto #{combinedPosition} del ranking general</p>
+      )}
       <div className={`${styles.buttonBox} enterFromBottom delay3`}>
         <Button className={styles.finishButton} onClick={onFinish}>
           Finalizar
