@@ -124,3 +124,18 @@
   text-align: center;
 }
 
+/* No esta en Figma - agregado para que la persona vea si entro al ranking
+   general antes de irse, deliberadamente subtle para no competir con la
+   tarjeta del Top 5 (ver el comentario junto al poll en Ranking.tsx). */
+.myPosition {
+  position: absolute;
+  left: 50%;
+  top: 1010px;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-text-muted);
+  font-size: 36px;
+  text-align: center;
+}
+

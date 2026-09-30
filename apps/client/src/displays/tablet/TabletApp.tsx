@@ -110,7 +110,6 @@ export function TabletApp() {
       {screen === 'thankYou' && (
         <ThankYou
           name={session.name}
-          email={session.email}
           points={points}
           onFinish={() => {
             // El resultado de la sesion viaja aparte de los eventos de UI del
@@ -133,6 +132,7 @@ export function TabletApp() {
 
       {screen === 'ranking' && (
         <Ranking
+          email={session.email}
           onFinish={() => {
             send({ type: 'SESSION_END', ts: Date.now() });
             goHome();

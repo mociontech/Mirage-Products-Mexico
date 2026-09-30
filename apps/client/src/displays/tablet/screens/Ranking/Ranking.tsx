@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BrandFrame } from '../../../../components/BrandFrame/BrandFrame';
 import { Logo } from '../../../../components/Logo/Logo';
 import { MarqueeText } from '../../../../components/MarqueeText/MarqueeText';
-import { fetchTopRanking, getCachedTopRanking, type RankingEntry } from '../../../../services/ranking';
+import { fetchMyCombinedPosition, fetchTopRanking, getCachedTopRanking, type RankingEntry } from '../../../../services/ranking';
 import styles from './Ranking.module.css';
 
 const AUTO_RETURN_MS = 5000;
@@ -19,6 +19,8 @@ const AUTO_RETURN_MS = 5000;
 const POLL_INTERVAL_MS = 1500;
 
 interface RankingProps {
+  /** Email de quien acaba de terminar, para mostrarle su puesto en el ranking general (ver combinedPosition abajo). */
+  email: string | null;
   /** Se dispara solo, 5s despues de montar la pantalla - vuelve a Home y (via
    * el SESSION_END que dispara el caller) hace que el pitch vuelva a su loop. */
   onFinish: () => void;
@@ -49,11 +51,12 @@ function RankingRow({ entry, delayMs }: { entry: RankingEntry; delayMs: number }
   );
 }
 
-export function Ranking({ onFinish }: RankingProps) {
+export function Ranking({ email, onFinish }: RankingProps) {
   // Arranca con lo que TabletApp.tsx ya haya prefeteado (prefetchTopRanking)
   // al confirmar el producto - evita el parpadeo inicial mientras se repite
   // el fetch por si el cache quedo desactualizado.
   const [entries, setEntries] = useState<RankingEntry[]>(() => getCachedTopRanking() ?? []);
+  const [myPosition, setMyPosition] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,6 +74,30 @@ export function Ranking({ onFinish }: RankingProps) {
       clearInterval(interval);
     };
   }, []);
+
+  // Mismo motivo que el poll de arriba: el envio de ESTA participacion
+  // (PARTICIPATION_RESULT, disparado justo al entrar a esta pantalla) tarda
+  // en llegar a Supabase via el outbox - un solo fetch al montar casi
+  // siempre corre antes de que el insert exista y la persona nunca ve si
+  // quedo en el ranking general. Se sigue reintentando mientras la pantalla
+  // este montada (los mismos AUTO_RETURN_MS que el top 5).
+  useEffect(() => {
+    if (!email) return;
+    let cancelled = false;
+
+    const poll = () => {
+      fetchMyCombinedPosition(email).then((record) => {
+        if (!cancelled && record) setMyPosition(record.position);
+      });
+    };
+
+    poll();
+    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [email]);
 
   // Ref para leer siempre el ultimo onFinish sin que su identidad (recreada
   // en cada render de TabletApp, p.ej. por los HEARTBEAT que llegan por el
@@ -112,6 +139,7 @@ export function Ranking({ onFinish }: RankingProps) {
           </>
         )}
       </div>
+      {myPosition !== null && <p className={styles.myPosition}>Vas en el puesto #{myPosition}</p>}
     </BrandFrame>
   );
 }
