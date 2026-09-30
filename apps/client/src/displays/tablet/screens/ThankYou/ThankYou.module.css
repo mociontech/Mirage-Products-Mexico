@@ -47,21 +47,31 @@
   color: var(--color-text);
 }
 
+/*
+ * top/font-size/line-height ajustados (no son los originales de Figma):
+ * "ACUMULASTE" solo, en una linea, permitia centrar verticalmente con
+ * translate(-50%,-50%) sin problema. "ACUMULASTE EN ESTA EXPERIENCIA" ocupa
+ * 2 lineas, y centrar en Y con el mismo top hacia crecer el bloque HACIA
+ * ARRIBA tambien - se metia debajo del cuadro del puntaje (bug real visto en
+ * el evento). Ahora ancla desde arriba (no centra en Y) con un top mas bajo
+ * y letra mas chica para que 2 lineas quepan sin tocar el cuadro de arriba
+ * ni el boton de abajo.
+ */
 .label {
   position: absolute;
   left: 50%;
-  top: 787px;
-  width: 689px;
-  transform: translate(-50%, -50%);
+  top: 750px;
+  width: 800px;
+  transform: translateX(-50%);
   margin: 0;
   font-family: var(--font-heading);
   font-weight: 800;
   font-style: italic;
   text-transform: uppercase;
-  letter-spacing: 5px;
+  letter-spacing: 4px;
   font-stretch: 50%;
-  font-size: 82px;
-  line-height: 100px;
+  font-size: 62px;
+  line-height: 68px;
   color: #000;
   -webkit-text-stroke-width: 1px;
   -webkit-text-stroke-color: #fff;
