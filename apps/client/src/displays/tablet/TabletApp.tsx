@@ -124,6 +124,7 @@ export function TabletApp() {
               code: session.code,
               productId: selectedProductId,
               points,
+              viewedProductIds,
             });
             setScreen('ranking');
           }}

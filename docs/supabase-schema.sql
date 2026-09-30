@@ -21,6 +21,7 @@ create table if not exists participations (
   submitted_at   timestamptz not null,
   created_at     timestamptz not null default now(),
   is_anonymous   boolean not null default false, -- true = "Continua sin registro" (Products tablet/mobile); participant_id es un id sintetico "anon:<uuid>", nunca un email real. No compite por el premio - excluido de ranking_by_experience/ranking_combined (ver seccion 2/3) - pero se guarda para poder contar cuanta gente jugo sin registrarse.
+  viewed_products text[], -- solo Catalogo (Products tablet/mobile): IDs de todos los productos distintos vistos, no solo el ultimo - para "productos mas vistos". null en memory_match o en filas anteriores a este campo.
 
   constraint participations_experience_check check (experience in ('catalogo', 'memory_match')),
   constraint participations_score_check check (score >= 0 and score <= 100),

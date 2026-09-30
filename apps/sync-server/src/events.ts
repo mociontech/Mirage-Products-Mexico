@@ -31,6 +31,8 @@ export type PitchEvent =
       code: string | null;
       productId: string | null;
       points: number;
+      /** Todos los productos distintos que la persona vio, no solo el ultimo seleccionado - para "productos mas vistos". */
+      viewedProductIds: string[];
     };
 
 export const INITIAL_ROOM_STATE: RoomState = {

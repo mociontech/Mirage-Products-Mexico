@@ -113,6 +113,7 @@ interface ParticipationPayload {
   productId: string | null;
   points: number;
   ts: number;
+  viewedProductIds?: string[];
 }
 
 function isParticipationPayload(value: unknown): value is ParticipationPayload {
@@ -270,6 +271,7 @@ export async function deliverToRankingDb(payload: unknown): Promise<boolean> {
     score: payload.points,
     submitted_at: new Date(payload.ts).toISOString(),
     is_anonymous: isAnonymous,
+    viewed_products: payload.viewedProductIds ?? null,
   });
 }
 
