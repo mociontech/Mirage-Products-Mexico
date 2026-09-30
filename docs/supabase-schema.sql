@@ -20,6 +20,7 @@ create table if not exists participations (
   score          numeric not null,
   submitted_at   timestamptz not null,
   created_at     timestamptz not null default now(),
+  is_anonymous   boolean not null default false, -- true = "Continua sin registro" (Products tablet/mobile); participant_id es un id sintetico "anon:<uuid>", nunca un email real. No compite por el premio - excluido de ranking_by_experience/ranking_combined (ver seccion 2/3) - pero se guarda para poder contar cuanta gente jugo sin registrarse.
 
   constraint participations_experience_check check (experience in ('catalogo', 'memory_match')),
   constraint participations_score_check check (score >= 0 and score <= 100),
@@ -70,7 +71,8 @@ select
     partition by country, experience, (submitted_at at time zone 'utc' at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date
     order by score desc, submitted_at asc
   ) as position
-from participations;
+from participations
+where is_anonymous = false;
 
 comment on view ranking_by_experience is
   'Ranking dentro de una sola experiencia, POR DIA (event_day, huso horario del pais). El sync-server la consulta via PostgREST con ?country=eq.CO&experience=eq.catalogo&event_day=eq.YYYY-MM-DD&order=position.asc&limit=10.';
@@ -96,6 +98,7 @@ with tagged as (
     *,
     (submitted_at at time zone 'utc' at time zone (case when country = 'CO' then 'America/Bogota' else 'America/Mexico_City' end))::date as event_day
   from participations
+  where is_anonymous = false
 )
 select
   participant_id,

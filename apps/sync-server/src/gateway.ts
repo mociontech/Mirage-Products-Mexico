@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { log } from './logger.js';
 
 /**
@@ -252,19 +253,23 @@ export async function deliverToRankingDb(payload: unknown): Promise<boolean> {
   }
   if (!isParticipationPayload(payload)) return false;
 
+  // "Continua sin registro": antes esto se descartaba en silencio (nunca
+  // llegaba a Supabase), asi que no habia forma de saber cuanta gente jugo
+  // sin registrarse. Ahora se guarda igual, con un id sintetico (nunca
+  // colisiona con el unique constraint) y is_anonymous=true - las vistas de
+  // ranking (ranking_by_experience/ranking_combined) excluyen estas filas,
+  // asi que nunca compiten por el premio ni aparecen en el Top 5.
   const email = normalizeEmail(payload.email);
-  if (!email) {
-    log({ event: 'gateway_skipped_no_email', destination: 'rankingDb' });
-    return true;
-  }
+  const isAnonymous = !email;
 
   return postToSupabase(RANKING_DB_TABLE, {
-    participant_id: email,
+    participant_id: email ?? `anon:${randomUUID()}`,
     participant_name: payload.name?.trim() || null,
     country: COUNTRY,
     experience: 'catalogo',
     score: payload.points,
     submitted_at: new Date(payload.ts).toISOString(),
+    is_anonymous: isAnonymous,
   });
 }
 
